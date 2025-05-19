@@ -220,7 +220,7 @@ const FileExplorer = () => {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink onClick={() => navigateTo([])} className="dark:text-white">
+                <BreadcrumbLink onClick={() => navigateTo([])} className="dark:text-white flex items-center">
                   <Home className="h-4 w-4 mr-1" />
                   Home
                 </BreadcrumbLink>

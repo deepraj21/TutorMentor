@@ -9,10 +9,12 @@ import HomePage from "./pages/HomePage";
 import DrivePage from "./pages/DrivePage";
 import TestsPage from "./pages/TestsPage";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
+  <AuthProvider>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -29,6 +31,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </AuthProvider>
 );
 
 export default App;
