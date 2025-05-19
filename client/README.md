@@ -1,0 +1,1 @@
+pijush-tuition client (vite + tsx)
