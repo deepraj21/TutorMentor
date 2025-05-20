@@ -21,7 +21,7 @@ const HomePage = () => {
 
   const translations = {
     english: {
-      welcome: 'Welcome to Pijush-Tuition',
+      welcome: 'Welcome to TutorMentor',
       quickAccess: 'Quick Access',
       allFiles: 'All Files',
       testPapers: 'Test Papers',

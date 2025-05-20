@@ -85,37 +85,6 @@ const TestsPage = () => {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white dark:bg-gray-900">
       <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t.title}</h1>
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => setIsCreateFolderOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <FolderPlus className="h-4 w-4" />
-              {t.createFolder}
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={() => setIsUploadFileOpen(true)}
-              className="flex items-center gap-2 dark:border-gray-600 dark:text-white"
-            >
-              <Upload className="h-4 w-4" />
-              {t.uploadFile}
-            </Button>
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <SearchBar 
-            placeholder={t.search}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-        </div>
-        
         <TestPapers searchQuery={searchQuery} />
       </div>
 

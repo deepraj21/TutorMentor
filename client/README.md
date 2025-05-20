@@ -1,1 +1,1 @@
-pijush-tuition client (vite + tsx)
+TutorMentor client (vite + tsx)

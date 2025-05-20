@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useAuth } from "@/contexts/AuthContext"
 import google_img from "@/assets/google.png"
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import Logo from '../BrandLogo/Logo';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -24,8 +25,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
               <div className="flex items-center">
-                <a href="/">
-                  <h1 className="text-xl font-semibold text-tutor-primary dark:text-tutor-accent">Pijush-Tuition</h1>
+                <a href="/" className='flex items-end gap-2'>
+                <Logo />
+                  <h1 className="text-xl font-semibold text-tutor-primary dark:text-tutor-accent hidden md:block">TutorMentor</h1>
                 </a>
               </div>
               <div className="flex items-center space-x-4">
