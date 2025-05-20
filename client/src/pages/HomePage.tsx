@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useFileSystem } from '@/contexts/FileSystemContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileItem as FileItemType } from '@/types';
-import { File, Folder, Clock, ArrowRight, FileText, Search } from 'lucide-react';
+import { File, Folder, Clock, ArrowRight, FileText, Search, LayoutGrid } from 'lucide-react';
 import { getFormattedDate } from '@/utils/fileUtils';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -12,6 +12,10 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import no_user from "@/assets/no-user.webp"
 import google_img from "@/assets/google.png"
+import AllFilesImg from "@/assets/all-files.webp"
+import TestFilesImg from "@/assets/test-files.webp"
+import TutorAiImg from "@/assets/tutor-ai.webp"
+import ChatHistoryImg from "@/assets/chat-history.webp"
 
 const HomePage = () => {
   const { files } = useFileSystem();
@@ -24,8 +28,8 @@ const HomePage = () => {
       welcome: 'Welcome to TutorMentor',
       quickAccess: 'Quick Access',
       allFiles: 'All Files',
-      testPapers: 'Test Papers',
-      recentFiles: 'Recent Files',
+      testPapers: 'Test',
+      recentFiles: 'Recently Visited',
       viewAll: 'View all',
       noRecentFiles: 'No recent files to display',
       recentTestPapers: 'Recent Test Papers',
@@ -41,7 +45,7 @@ const HomePage = () => {
       recentFiles: 'সাম্প্রতিক ফাইল',
       viewAll: 'সব দেখুন',
       noRecentFiles: 'প্রদর্শন করার জন্য কোন সাম্প্রতিক ফাইল নেই',
-      recentTestPapers: 'সাম্প্রতিক পরীক্ষার কাগজপত্র',
+      recentTestPapers: 'পরীক্ষার কাগজপত্র',
       noTestPapers: 'কোন পরীক্ষার কাগজপত্র উপলব্ধ নেই',
       rootFolder: 'মূল ফোল্ডার',
       searchPlaceholder: 'ফাইল এবং ফোল্ডার খুঁজুন...'
@@ -87,31 +91,29 @@ const HomePage = () => {
     <>
     {
       isLoggedIn ? (
-          <div className="container mx-auto p-4">
-            <h1 className="text-2xl mb-6 dark:text-white">{t.welcome}</h1>
-
-            {/* Search bar */}
-            <div className="mb-6">
+          <div className="container mx-auto pb-10">
+            <div className="fixed left-1/2 transform -translate-x-1/2 shadow-lg w-[92%] overflow-hidden pt-4 bg-white dark:bg-gray-900 rounded-lg">
               <SearchBar
                 placeholder={t.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
+                className="w-full shadow-lg"
               />
             </div>
 
             {/* Quick access section */}
-            <section className="mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold dark:text-white">{t.quickAccess}</h2>
+            <section className="mb-8 pt-24">
+              <div className="flex items-center mb-4">
+                <LayoutGrid className="h-5 w-5 mr-2 text-tutor-primary dark:text-tutor-accent" />
+                <h2 className="text-lg dark:text-white">{t.quickAccess}</h2>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Link to="/drive" className="block">
                   <Card className="hover:shadow-md transition-shadow h-full dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="flex flex-col items-center justify-center py-6">
-                      <Folder className="h-10 w-10 text-tutor-primary dark:text-tutor-accent mb-2" />
-                      <h3 className="font-medium dark:text-white">{t.allFiles}</h3>
+                      <img src={AllFilesImg} alt="All Files" className='h-24 w-24' />
+                      <h3 className="font-medium dark:text-white w-full truncate text-center">{t.allFiles}</h3>
                     </CardContent>
                   </Card>
                 </Link>
@@ -119,29 +121,37 @@ const HomePage = () => {
                 <Link to="/tests" className="block">
                   <Card className="hover:shadow-md transition-shadow h-full dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="flex flex-col items-center justify-center py-6">
-                      <FileText className="h-10 w-10 text-tutor-secondary dark:text-tutor-secondary mb-2" />
-                      <h3 className="font-medium dark:text-white">{t.testPapers}</h3>
+                      <img src={TestFilesImg} alt="Test Files" className='h-24 w-24' />
+                      <h3 className="font-medium dark:text-white w-full truncate text-center">{t.testPapers}</h3>
                     </CardContent>
                   </Card>
                 </Link>
 
-                {folders.slice(0, 2).map(folder => (
-                  <Link to={`/drive?folder=${folder.name}`} key={folder.id} className="block">
+                  <Link to="" className="block">
                     <Card className="hover:shadow-md transition-shadow h-full dark:bg-gray-800 dark:border-gray-700">
                       <CardContent className="flex flex-col items-center justify-center py-6">
-                        <Folder className="h-10 w-10 text-tutor-primary dark:text-tutor-accent mb-2" />
-                        <h3 className="font-medium dark:text-white">{folder.name}</h3>
+                        <img src={TutorAiImg} alt="Tutor Ai" className='h-24 w-24' />
+                      <h3 className="font-medium dark:text-white w-full truncate text-center">Tutor AI</h3>
                       </CardContent>
                     </Card>
                   </Link>
-                ))}
+
+                <Link to="" className="block">
+                  <Card className="hover:shadow-md transition-shadow h-full dark:bg-gray-800 dark:border-gray-700">
+                    <CardContent className="flex flex-col items-center justify-center py-6">
+                      <img src={ChatHistoryImg} alt="Tutor Ai" className='h-24 w-24' />
+                      <h3 className="font-medium dark:text-white w-full truncate text-center">Chat History</h3>
+                    </CardContent>
+                  </Card>
+                </Link>
+                
               </div>
             </section>
 
             {/* Recent files section */}
             <section className="mb-8">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold flex items-center dark:text-white">
+                <h2 className="text-lg flex items-center dark:text-white">
                   <Clock className="h-5 w-5 mr-2 text-tutor-primary dark:text-tutor-accent" />
                   {t.recentFiles}
                 </h2>
@@ -185,7 +195,10 @@ const HomePage = () => {
             {/* Test papers preview */}
             <section>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold dark:text-white">{t.recentTestPapers}</h2>
+                <h2 className="text-lg dark:text-white flex items-center">
+                  <FileText className="h-5 w-5 mr-2 text-tutor-primary dark:text-tutor-accent" />
+                  {t.recentTestPapers}
+                  </h2>
                 <Link to="/tests">
                   <Button variant="ghost" className="text-tutor-primary dark:text-tutor-accent">
                     {t.viewAll} <ArrowRight className="h-4 w-4 ml-1" />

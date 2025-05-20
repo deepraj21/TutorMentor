@@ -117,6 +117,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
 
                 </div>
               </div>
+              <span className='text-center text-xs'>© 2025 TutorMentor</span>
             </DialogContent>
           </Dialog> 
       )

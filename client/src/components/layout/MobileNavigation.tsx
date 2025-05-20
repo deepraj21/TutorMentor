@@ -1,5 +1,5 @@
 
-import { Home, FolderOpen, FileText } from 'lucide-react';
+import { Home, FolderOpen, FileText, MessageSquareDotIcon } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const MobileNavigation = () => {
@@ -40,6 +40,14 @@ const MobileNavigation = () => {
         >
           <FileText className="h-5 w-5" />
           <span className="text-xs mt-1">Tests</span>
+        </Link>
+        <Link
+          to="/tests"
+          className={`flex flex-col items-center justify-center w-full h-full ${isActive('/tests') ? 'text-tutor-primary' : 'text-gray-500'
+            }`}
+        >
+          <MessageSquareDotIcon className="h-5 w-5" />
+          <span className="text-xs mt-1">Chat</span>
         </Link>
       </div>
     </div>
