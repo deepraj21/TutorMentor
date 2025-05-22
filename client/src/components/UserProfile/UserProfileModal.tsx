@@ -47,7 +47,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
      {
       isLoggedIn && (
           <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md dark:bg-gray-800 dark:text-white">
+            <DialogContent className="sm:max-w-md dark:bg-gray-800 dark:text-white p-2 md:p-4">
               <DialogHeader>
                 <DialogTitle className="text-xl font-semibold">{t.profile}</DialogTitle>
               </DialogHeader>

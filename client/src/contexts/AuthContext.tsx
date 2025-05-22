@@ -15,14 +15,35 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Try to load from localStorage first
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem("authUser");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const storedLoggedIn = localStorage.getItem("isLoggedIn");
+    return storedLoggedIn === "true";
+  });
 
   // Monitor authentication state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setIsLoggedIn(!!currentUser);
+
+      // Save to localStorage
+      if (currentUser) {
+        localStorage.setItem("authUser", JSON.stringify({
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL,
+        }));
+        localStorage.setItem("isLoggedIn", "true");
+      } else {
+        localStorage.removeItem("authUser");
+        localStorage.setItem("isLoggedIn", "false");
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -31,6 +52,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      // Save to localStorage
+      localStorage.setItem("authUser", JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      }));
+      localStorage.setItem("isLoggedIn", "true");
 
       // await axios.post(`${BACKEND_URL}/api/auth`, {
       //   email: user.email,
@@ -47,6 +77,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await auth.signOut();
       setUser(null);
       setIsLoggedIn(false);
+      localStorage.removeItem("authUser");
+      localStorage.setItem("isLoggedIn", "false");
     } catch (error) {
       console.error("Error signing out:", error);
     }

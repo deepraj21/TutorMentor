@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { useFileSystem } from '@/contexts/FileSystemContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileItem as FileItemType } from '@/types';
 import { File, Folder, Clock, ArrowRight, FileText, Search, LayoutGrid } from 'lucide-react';
 import { getFormattedDate } from '@/utils/fileUtils';
@@ -16,6 +15,7 @@ import AllFilesImg from "@/assets/all-files.webp"
 import TestFilesImg from "@/assets/test-files.webp"
 import TutorAiImg from "@/assets/tutor-ai.webp"
 import ChatHistoryImg from "@/assets/chat-history.webp"
+import pdf_icon from "@/assets/pdf_icon.webp"
 
 const HomePage = () => {
   const { files } = useFileSystem();
@@ -92,7 +92,7 @@ const HomePage = () => {
     {
       isLoggedIn ? (
           <div className="container mx-auto pb-10">
-            <div className="fixed left-1/2 transform -translate-x-1/2 shadow-lg w-[92%] overflow-hidden pt-4 bg-white dark:bg-gray-900 rounded-lg">
+            <div className="fixed left-1/2 transform -translate-x-1/2 shadow-lg w-[92%] overflow-hidden pt-4 bg-white dark:bg-gray-900 rounded-[22px] overflow-hidden">
               <SearchBar
                 placeholder={t.searchPlaceholder}
                 value={searchQuery}
@@ -166,19 +166,28 @@ const HomePage = () => {
                 <div className="space-y-2">
                   {filteredRecentFiles.map(file => (
                     <Card key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
-                      <CardContent className="p-3 flex items-center justify-between">
-                        <div className="flex items-center">
-                          {renderFileIcon(file)}
-                          <div className="ml-3">
-                            <h3 className="font-medium text-sm dark:text-white">{file.name}</h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <CardContent className="flex items-center justify-between p-0">
+                        <div className="flex items-center flex-row gap-2 w-[70%]">
+                          {/* {renderFileIcon(file)} */}
+                          <div className='p-2 border-r dark:border-gray-700 border-gray-200'>
+                             <img src={pdf_icon} alt="pdf_icon" className='h-12 w-12' />
+                          </div>
+                         
+                          <div className="w-[65%]">
+                            <h3 className="font-medium text-sm dark:text-white truncate">{file.name} </h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">In :
                               {file.path.length > 0 ? file.path.join(' > ') : t.rootFolder}
                             </p>
                           </div>
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {file.lastModified && getFormattedDate(file.lastModified)}
-                        </span>
+                        <div className='flex flex-col mr-2'>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 flex justify-end">
+                            10:29 PM
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {file.lastModified && getFormattedDate(file.lastModified)}
+                          </span>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}

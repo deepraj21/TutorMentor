@@ -42,8 +42,8 @@ const MobileNavigation = () => {
           <span className="text-xs mt-1">Tests</span>
         </Link>
         <Link
-          to="/tests"
-          className={`flex flex-col items-center justify-center w-full h-full ${isActive('/tests') ? 'text-tutor-primary' : 'text-gray-500'
+          to="/chat"
+          className={`flex flex-col items-center justify-center w-full h-full ${isActive('/chat') ? 'text-tutor-primary' : 'text-gray-500'
             }`}
         >
           <MessageSquareDotIcon className="h-5 w-5" />

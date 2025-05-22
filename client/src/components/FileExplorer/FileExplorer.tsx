@@ -2,34 +2,29 @@
 import { useState } from 'react';
 import { useFileSystem } from '@/contexts/FileSystemContext';
 import { FileItem as FileItemType } from '@/types';
-import FileItem from './FileItem';
-import { 
-  ArrowUp, 
-  FolderPlus, 
-  Upload, 
-  Search, 
+import pdf_icon from "@/assets/pdf_icon.webp"
+import doc_img from "@/assets/doc_img.webp"
+import {
   Home,
-  X
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useTheme } from '@/contexts/ThemeContext';
+import SearchBar from '../SearchBar/SearchBar';
+import { Card, CardContent } from '../ui/card';
+import folder_img from "@/assets/all-files.webp"
 
 const FileExplorer = () => {
-  const { 
-    currentPath, 
-    navigateUp, 
-    navigateTo, 
-    currentViewFiles, 
-    createFolder, 
+  const {
+    currentPath,
+    navigateUp,
+    navigateTo,
+    currentViewFiles,
+    createFolder,
     uploadFile,
-    searchFiles 
+    searchFiles
   } = useFileSystem();
-  
+
   const { language } = useTheme();
 
   const translations = {
@@ -53,7 +48,9 @@ const FileExplorer = () => {
       filePreview: "File Preview",
       close: "Close",
       goBack: "Go back",
-      cancel: "Cancel"
+      cancel: "Cancel",
+      rootFolder: "Root",
+      noRecentFiles: "No recent files found"
     },
     bengali: {
       search: "ফাইল খুঁজুন...",
@@ -75,12 +72,22 @@ const FileExplorer = () => {
       filePreview: "ফাইল প্রিভিউ",
       close: "বন্ধ করুন",
       goBack: "ফিরে যান",
-      cancel: "বাতিল"
+      cancel: "বাতিল",
+      rootFolder: "মূল ফোল্ডার",
+      noRecentFiles: "কোনও সাম্প্রতিক ফাইল পাওয়া যায়নি"
     }
   };
 
   const t = translations[language];
-  
+
+  const recentFiles = [...currentViewFiles]
+    .filter(file => file.type === 'file')
+    .sort((a, b) => {
+      if (!a.lastModified || !b.lastModified) return 0;
+      return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
+    })
+    .slice(0, 5);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<FileItemType[]>([]);
   const [newFolderName, setNewFolderName] = useState('');
@@ -127,9 +134,9 @@ const FileExplorer = () => {
 
   const handleFileUpload = async () => {
     if (!selectedFile) return;
-    
+
     await uploadFile(selectedFile, { class: fileClass, description: fileDescription });
-    
+
     // Reset form
     setSelectedFile(null);
     setFileClass('');
@@ -149,26 +156,26 @@ const FileExplorer = () => {
   // Function to get appropriate component for file preview
   const renderFilePreview = () => {
     if (!previewFile || previewFile.type !== 'file') return null;
-    
+
     const extension = previewFile.extension?.toLowerCase();
     const content = previewFile.content as string;
-    
+
     // For images
     if (['jpg', 'jpeg', 'png', 'gif'].includes(extension || '')) {
       return <img src={content} alt={previewFile.name} className="max-w-full max-h-[70vh] object-contain" />;
     }
-    
+
     // For PDFs
     if (extension === 'pdf') {
       return (
-        <iframe 
-          src={content} 
-          className="w-full h-[70vh]" 
+        <iframe
+          src={content}
+          className="w-full h-[70vh]"
           title={previewFile.name}
         />
       );
     }
-    
+
     // For videos
     if (['mp4', 'webm', 'ogg'].includes(extension || '')) {
       return (
@@ -178,7 +185,7 @@ const FileExplorer = () => {
         </video>
       );
     }
-    
+
     // For audio
     if (['mp3', 'wav', 'ogg'].includes(extension || '')) {
       return (
@@ -188,7 +195,7 @@ const FileExplorer = () => {
         </audio>
       );
     }
-    
+
     // For documents and other file types, offer download option
     return (
       <div className="flex flex-col items-center justify-center p-8">
@@ -212,11 +219,18 @@ const FileExplorer = () => {
   };
 
   return (
-    <div className="p-4 w-full max-w-6xl mx-auto dark:bg-gray-900 dark:text-white">
-      {/* Top bar with breadcrumbs and actions */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+    <div className=" w-full max-w-6xl mx-auto dark:bg-gray-900 dark:text-white">
+      <div className="fixed left-1/2 transform -translate-x-1/2 w-[92%] overflow-hidden pt-4 bg-white dark:bg-gray-900 rounded-lg">
+        <div className='shadow-lg rounded-full overflow-hidden'>
+          <SearchBar
+            placeholder="Search files and folders..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full shadow-lg"
+          />
+        </div>
         {/* Breadcrumbs */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 p-2 pt-4">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -225,11 +239,11 @@ const FileExplorer = () => {
                   Home
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              
+
               {currentPath.map((path, index) => (
                 <BreadcrumbItem key={index}>
                   <BreadcrumbSeparator />
-                  <BreadcrumbLink 
+                  <BreadcrumbLink
                     onClick={() => navigateTo(currentPath.slice(0, index + 1))}
                     className="dark:text-white"
                   >
@@ -240,189 +254,101 @@ const FileExplorer = () => {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-
-        {/* Actions */}
-        <div className="flex space-x-2 w-full md:w-auto">
-          {currentPath.length > 0 && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={navigateUp}
-              className="h-9 w-9 dark:border-gray-600 dark:text-white"
-              title="Go up one level"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </Button>
-          )}
-          
-          <div className="relative flex-1 md:flex-none">
-            <Input
-              placeholder={t.search}
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-              className="pr-8 w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-full dark:text-gray-400"
-              onClick={handleSearch}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* New folder dialog */}
-          <Dialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9 dark:border-gray-600 dark:text-white" title="Create new folder">
-                <FolderPlus className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
-              <DialogHeader>
-                <DialogTitle>{t.createFolder}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="folderName" className="dark:text-white">{t.folderName}</Label>
-                  <Input
-                    id="folderName"
-                    placeholder={t.enterFolderName}
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
-                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setFolderDialogOpen(false)} className="dark:border-gray-600 dark:text-white">
-                    {t.cancel}
-                  </Button>
-                  <Button onClick={handleCreateFolder}>
-                    {t.create}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Upload file dialog */}
-          <Dialog open={fileDialogOpen} onOpenChange={setFileDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9 dark:border-gray-600 dark:text-white" title="Upload file">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="dark:bg-gray-800 dark:text-white dark:border-gray-700">
-              <DialogHeader>
-                <DialogTitle>{t.uploadFile}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fileUpload" className="dark:text-white">{t.selectFile}</Label>
-                  <Input
-                    id="fileUpload"
-                    type="file"
-                    onChange={handleFileInputChange}
-                    className="cursor-pointer dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-                
-                {selectedFile && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="fileClass" className="dark:text-white">{t.class}</Label>
-                      <Input
-                        id="fileClass"
-                        value={fileClass}
-                        onChange={(e) => setFileClass(e.target.value)}
-                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="fileDescription" className="dark:text-white">{t.description}</Label>
-                      <Textarea
-                        id="fileDescription"
-                        value={fileDescription}
-                        onChange={(e) => setFileDescription(e.target.value)}
-                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        rows={3}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setFileDialogOpen(false)} className="dark:border-gray-600 dark:text-white">
-                  {t.cancel}
-                </Button>
-                <Button onClick={handleFileUpload} disabled={!selectedFile}>
-                  {t.upload}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
 
-      {/* Search results indicator */}
-      {searchResults.length > 0 && (
-        <div className="mb-4 flex justify-between items-center dark:text-gray-300">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {t.searchResults} {searchResults.length} {searchResults.length !== 1 ? t.results : t.result}
-          </p>
-          <Button 
-            variant="link" 
-            onClick={() => {
-              setSearchQuery('');
-              setSearchResults([]);
-            }}
-            className="h-8 p-0 dark:text-gray-400"
-          >
-            {t.clear}
-          </Button>
-        </div>
-      )}
+      <section className="mb-8 p-8 pt-32">
 
-      {/* Files and folders grid */}
-      {filesToDisplay.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {filesToDisplay.map((item) => (
-            <FileItem key={item.id} item={item} onItemClick={handleItemClick} />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center dark:text-gray-300">
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-full p-4 mb-4">
-            <FolderPlus className="h-8 w-8 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-semibold">{t.emptyFolder}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xs">
-            {t.emptyDescription}
-          </p>
-        </div>
-      )}
+        {recentFiles.length > 0 ? (
+          <div className="space-y-2">
+            {recentFiles.map(file => (
+              <Card key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
+                <CardContent className="flex items-center justify-between p-0">
+                  <div className="flex items-center flex-row gap-2 w-[70%]">
+                    {/* {renderFileIcon(file)} */}
+                    <div className='p-2 border-r border-gray-700'>
+                      <img src={pdf_icon} alt="pdf_icon" className='h-12 w-12' />
+                    </div>
 
-      {/* File Preview Dialog */}
-      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
-        <DialogContent className="max-w-5xl dark:bg-gray-800 dark:text-white dark:border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {previewFile?.name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="mt-2 flex justify-center items-center">
-            {renderFilePreview()}
+                    <div className="w-[65%]">
+                      <h3 className="font-medium text-sm dark:text-white truncate">{file.name} </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">In :
+                        {file.path.length > 0 ? file.path.join(' > ') : t.rootFolder}
+                      </p>
+                    </div>
+                  </div>
+                  <div className='flex flex-col mr-2'>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 flex justify-end">
+                      10:29 PM
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {/* {file.lastModified && getFormattedDate(file.lastModified)} */}
+                      May 22, 2025
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            <Card className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="flex items-center justify-between p-0">
+                <div className="flex items-center flex-row gap-2 w-[70%]">
+                  {/* {renderFileIcon(file)} */}
+                  <div className='p-2 border-r border-gray-700'>
+                    <img src={doc_img} alt="pdf_icon" className='h-12 w-12' />
+                  </div>
+
+                  <div className="w-[65%]">
+                    <h3 className="font-medium text-sm dark:text-white truncate">name Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolore unde magni veritatis, mollitia eius illo! Omnis sed quibusdam ex distinctio!</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">In :
+                      Home
+                    </p>
+                  </div>
+                </div>
+                <div className='flex flex-col mr-2'>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 flex justify-end">
+                    10:29 PM
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {/* {file.lastModified && getFormattedDate(file.lastModified)} */}
+                    May 22, 2025
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+            <Card  className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="flex items-center justify-between p-0">
+                <div className="flex items-center flex-row gap-2 w-[70%]">
+                  {/* {renderFileIcon(file)} */}
+                  <div className='p-2 border-r border-gray-700'>
+                    <img src={folder_img} alt="pdf_icon" className='h-12 w-12' />
+                  </div>
+
+                  <div className="w-[65%]">
+                    <h3 className="font-medium text-sm dark:text-white truncate">name Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolore unde magni veritatis, mollitia eius illo! Omnis sed quibusdam ex distinctio!</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">In :
+                     Home
+                    </p>
+                  </div>
+                </div>
+                <div className='flex flex-col mr-2'>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 flex justify-end">
+                    10:29 PM
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {/* {file.lastModified && getFormattedDate(file.lastModified)} */}
+                    May 22, 2025
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <DialogFooter>
-            <Button onClick={() => setPreviewFile(null)} className="mt-4">
-              {t.close}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        ) : (
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardContent className="p-6 text-center">
+              <p className="text-gray-500 dark:text-gray-400">{t.noRecentFiles}</p>
+            </CardContent>
+          </Card>
+        )}
+      </section>
     </div>
   );
 };

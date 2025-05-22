@@ -14,7 +14,7 @@ const SearchBar = ({ className = '', placeholder, ...props }: SearchBarProps) =>
       </div>
       <input
         type="search"
-        className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-tutor-primary focus:border-tutor-primary dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-tutor-accent dark:focus:border-tutor-accent"
+        className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-full bg-white focus:ring-tutor-primary focus:border-tutor-primary dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-tutor-accent dark:focus:border-tutor-accent"
         placeholder={placeholder}
         {...props}
       />
