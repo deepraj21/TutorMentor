@@ -25,6 +25,9 @@ const connectDB = async () => {
 
 connectDB();
 
+app.get('/', (req, res) => {
+    res.send('Welcome to tutor-mentor-server');
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/batch', batchRoutes);
 
