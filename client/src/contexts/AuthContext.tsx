@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { auth, provider, signInWithPopup } from "@/utils/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-// import axios from "axios";
+import axios from "axios";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
@@ -10,7 +11,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
-// const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -31,7 +32,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(currentUser);
       setIsLoggedIn(!!currentUser);
 
-      // Save to localStorage
       if (currentUser) {
         localStorage.setItem("authUser", JSON.stringify({
           uid: currentUser.uid,
@@ -53,22 +53,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Save to localStorage
+      const response = await axios.post(`${BACKEND_URL}/api/auth`, {
+        name: user.displayName,
+        email: user.email,
+      });
+
       localStorage.setItem("authUser", JSON.stringify({
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
       }));
+      localStorage.setItem("studentId", response.data.user._id);
       localStorage.setItem("isLoggedIn", "true");
-
-      // await axios.post(`${BACKEND_URL}/api/auth`, {
-      //   email: user.email,
-      //   name: user.displayName,
-      // });
+      window.location.reload();
+      toast.success(response.data.message);
 
     } catch (error) {
       console.error("Error signing in:", error);
+      toast.error("Failed to sign in");
     }
   };
 
