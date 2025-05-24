@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import SearchBar from '@/components/SearchBar/SearchBar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import BatchCodeInput from '@/components/BatchCodeInput';
+import BatchCodeInput from '@/components/BatchCode/BatchCodeInput';
 import no_user from "@/assets/no-user.webp"
 import google_img from "@/assets/google.png"
 import AllFilesImg from "@/assets/all-files.webp"
@@ -23,9 +23,6 @@ import pendingImg from "@/assets/pending.webp"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
@@ -175,12 +172,12 @@ const HomePage = () => {
             {
               userData?.status == "Accepted" && (
                 <>
-                  <div className="fixed left-1/2 transform -translate-x-1/2 shadow-lg w-[92%] overflow-hidden pt-4 bg-white dark:bg-gray-900 rounded-[22px] overflow-hidden">
+                  <div className="fixed left-1/2 transform -translate-x-1/2 md:container w-[92%] pt-4 bg-white dark:bg-gray-900 rounded-[22px]">
                     <SearchBar
                       placeholder={t.searchPlaceholder}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full shadow-lg"
+                      className="w-full shadow-lg rounded-[23px]"
                     />
                   </div>
 

@@ -2,10 +2,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Theme = 'light' | 'dark';
+type Language = 'english' | 'bengali';
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  language: Language;
+  setLanguage: (language: Language) => void;
   toggleTheme: () => void;
 }
 
@@ -28,8 +31,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const savedTheme = localStorage.getItem('pijush-tuition-theme');
     return (savedTheme as Theme) || 'light';
   });
-  
- 
+
+  const [language, setLanguage] = useState<Language>(() => {
+    const savedLanguage = localStorage.getItem('pijush-tuition-language');
+    return (savedLanguage as Language) || 'english';
+  });
+
   useEffect(() => {
     localStorage.setItem('pijush-tuition-theme', theme);
     if (theme === 'dark') {
@@ -39,13 +46,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
   }, [theme]);
 
+  useEffect(() => {
+    localStorage.setItem('pijush-tuition-language', language);
+  }, [language]);
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, language, setLanguage, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

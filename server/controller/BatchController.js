@@ -123,4 +123,30 @@ export const getBatchDetails = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching batch details', error: error.message });
   }
+};
+
+export const deleteBatch = async (req, res) => {
+  try {
+    const { batchId, adminId } = req.body;
+
+    const batch = await Batch.findById(batchId);
+    if (!batch) {
+      return res.status(404).json({ message: 'Batch not found' });
+    }
+
+    if (batch.createdBy.toString() !== adminId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this batch' });
+    }
+
+    await User.updateMany(
+      { batch: batchId },
+      { $unset: { batch: 1 }, status: 'NoBatch' }
+    );
+
+    await Batch.findByIdAndDelete(batchId);
+
+    res.status(200).json({ message: 'Batch deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting batch', error: error.message });
+  }
 }; 

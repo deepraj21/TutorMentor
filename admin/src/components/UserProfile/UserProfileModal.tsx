@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from '@/contexts/ThemeContext';
-// import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/contexts/AuthContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface UserProfileModalProps {
@@ -14,12 +13,12 @@ interface UserProfileModalProps {
 }
 
 const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
-  // const { user, isLoggedIn, signOut } = useAuth()
+  const { admin, isLoggedIn, signout } = useAuth()
   const { theme, toggleTheme, language, setLanguage } = useTheme();
 
   const translations = {
     english: {
-      profile: 'User Profile',
+      profile: 'Admin Profile',
       name: 'Name',
       email: 'Email',
       class: 'Class',
@@ -29,7 +28,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
       bengali: 'Bengali'
     },
     bengali: {
-      profile: 'ব্যবহারকারী প্রোফাইল',
+      profile: 'অ্যাডমিন প্রোফাইল',
       name: 'নাম',
       email: 'ইমেইল',
       class: 'শ্রেণী',
@@ -44,7 +43,83 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
 
   return (
     <>
-    
+     {
+      isLoggedIn && (
+          <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md dark:bg-gray-800 dark:text-white p-2 md:p-4">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-semibold">{t.profile}</DialogTitle>
+              </DialogHeader>
+
+              <div className="flex flex-col items-center py-4">
+
+                <div className='flex flex-row gap-4 w-full items-center'>
+                  <Avatar className="h-24 w-24">
+                    <AvatarFallback className="bg-tutor-primary text-white text-xl">
+                      {admin?.name ? admin.name.charAt(0) : "P"}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className='flex flex-col w-full'>
+                    <div className="space-y-1">
+                      <Label>{t.name}</Label>
+                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">{admin.name || "Admin"}</div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>{t.email}</Label>
+                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">{admin.email || "Email"}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full space-y-4">
+                  <div className="flex items-center justify-between space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="theme-mode">{t.theme}</Label>
+                    </div>
+                    <Switch
+                      id="theme-mode"
+                      checked={theme === 'dark'}
+                      onCheckedChange={toggleTheme}
+                    />
+                  </div>
+
+                  <div className="space-y-1 flex gap-12 items-center">
+                    <Label htmlFor="language-select">{t.language}</Label>
+                    <Select
+                      value={language}
+                      onValueChange={(value) => setLanguage(value as 'english' | 'bengali')}
+                    >
+                      <SelectTrigger id="language-select">
+                        <SelectValue placeholder={t.language} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="english">{t.english}</SelectItem>
+                        <SelectItem value="bengali">{t.bengali}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center justify-between space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label>Signout from Account</Label>
+                    </div>
+                    <button
+                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                      onClick={signout}
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+              <span className='text-center text-xs'>© 2025 TutorMentor</span>
+            </DialogContent>
+          </Dialog> 
+      )
+    }
     </>
   );
 };
