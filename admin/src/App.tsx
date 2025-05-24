@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SignIn } from "./pages/SignIn";
+import Drive from "./pages/Drive";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,7 @@ function AppRoutes() {
           isLoggedIn ? <Dashboard /> : <Navigate to="/" replace />
         }
       />
-      {/* <Route path="/tests" element={<TestsPage />} /> */}
+      <Route path="/drive" element={<Drive />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

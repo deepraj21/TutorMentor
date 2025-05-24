@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import cors from 'cors'; 
 import authRoutes from './routes/Auth.js';
 import batchRoutes from './routes/Batch.js';
+import folderRoutes from './routes/Folder.js';
+import fileRoutes from './routes/File.js';
 
 dotenv.config();
 
@@ -28,8 +30,11 @@ connectDB();
 app.get('/', (req, res) => {
     res.send('Welcome to tutor-mentor-server');
 });
+
 app.use('/api/auth', authRoutes);
 app.use('/api/batch', batchRoutes);
+app.use('/api/folder', folderRoutes);
+app.use('/api/file', fileRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
