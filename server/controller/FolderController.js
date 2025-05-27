@@ -1,18 +1,32 @@
 import Folder from '../model/Folder.js';
 import File from '../model/File.js';
+import { cloudinary } from '../utils/cloudinary.js';
 
 export const createFolder = async (req, res) => {
     try {
         const { name, batchId, adminId, parentFolderId } = req.body;
 
+        console.log('Creating folder with data:', req.body);
+
+        if (!batchId) {
+            return res.status(400).json({ message: 'batchId is required' });
+        }
+
         let path = name;
+        let cloudinaryPath = `tutor-mentor/batch-${batchId}`;
         if (parentFolderId) {
             const parentFolder = await Folder.findById(parentFolderId);
             if (!parentFolder) {
                 return res.status(404).json({ message: 'Parent folder not found' });
             }
             path = `${parentFolder.path}/${name}`;
+            cloudinaryPath = `tutor-mentor/batch-${batchId}/${parentFolder.path}/${name}`;
+        } else {
+            cloudinaryPath = `tutor-mentor/batch-${batchId}/${name}`;
         }
+
+        // Create the folder in Cloudinary
+        await cloudinary.api.create_folder(cloudinaryPath);
 
         const folder = new Folder({
             name,
@@ -36,7 +50,6 @@ export const createFolder = async (req, res) => {
 export const getFolderContents = async (req, res) => {
     try {
         const { batchId, folderId } = req.params;
-        console.log('Fetching contents for batch:', batchId, 'folder:', folderId); // Debug log
 
         const folderQuery = { batch: batchId };
         const fileQuery = { batch: batchId };
@@ -49,9 +62,6 @@ export const getFolderContents = async (req, res) => {
             fileQuery.folder = null;
         }
 
-        console.log('Folder query:', folderQuery); // Debug log
-        console.log('File query:', fileQuery); // Debug log
-
         const [folders, files] = await Promise.all([
             Folder.find(folderQuery)
                 .populate('createdBy', 'name')
@@ -61,12 +71,9 @@ export const getFolderContents = async (req, res) => {
                 .sort({ createdAt: -1 })
         ]);
 
-        console.log('Found folders:', folders.length); // Debug log
-        console.log('Found files:', files.length); // Debug log
-
         res.json({ folders, files });
     } catch (error) {
-        console.error('Error in getFolderContents:', error); // Debug log
+        console.error('Error in getFolderContents:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -101,4 +108,4 @@ export const deleteFolder = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-}; 
+};

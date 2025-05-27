@@ -26,11 +26,21 @@ export const authenticateUser = async (req, res) => {
 export const getuserData = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await User.findById(id);
+    const user = await User.findById(id).populate('batch');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    return res.status(200).json({ user });
+    let batchDetails = null;
+    if (user.batch) {
+      batchDetails = {
+        batchId: user.batch._id,
+        batchName: user.batch.name
+      };
+    }
+    return res.status(200).json({
+      user,
+      batchDetails
+    });
   } catch (error) {
     return res.status(500).json({ message: 'Error fetching user', error: error.message });
   }

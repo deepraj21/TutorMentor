@@ -1,11 +1,11 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFileSystem } from '@/contexts/FileSystemContext';
 import { FileItem as FileItemType } from '@/types';
 import pdf_icon from "@/assets/pdf_icon.webp"
 import doc_img from "@/assets/doc_img.webp"
 import {
   Home,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
@@ -13,6 +13,27 @@ import { useTheme } from '@/contexts/ThemeContext';
 import SearchBar from '../SearchBar/SearchBar';
 import { Card, CardContent } from '../ui/card';
 import folder_img from "@/assets/all-files.webp"
+import axios from 'axios';
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+
+interface DriveFile {
+  _id: string;
+  name: string;
+  url: string;
+  mimeType: string;
+  size: number;
+  uploadedBy: { name: string };
+  createdAt: string;
+}
+
+interface Folder {
+  _id: string;
+  name: string;
+  path: string;
+  createdBy: { name: string };
+  createdAt: string;
+}
 
 const FileExplorer = () => {
   const {
@@ -26,94 +47,73 @@ const FileExplorer = () => {
   } = useFileSystem();
 
   const { language } = useTheme();
+  const [selectedBatch, setSelectedBatch] = useState<string>('');
+  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [files, setFiles] = useState<DriveFile[]>([]);
+  const [path, setPath] = useState<{ id: string; name: string }[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<DriveFile[]>([]);
+  const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const translations = {
-    english: {
-      search: "Search files...",
-      createFolder: "Create new folder",
-      uploadFile: "Upload file",
-      folderName: "Folder name",
-      enterFolderName: "Enter folder name",
-      selectFile: "Select a file",
-      create: "Create Folder",
-      upload: "Upload",
-      class: "Class",
-      description: "Description (optional)",
-      emptyFolder: "This folder is empty",
-      emptyDescription: "Upload files or create folders to populate this space",
-      searchResults: "Found",
-      result: "result",
-      results: "results",
-      clear: "Clear",
-      filePreview: "File Preview",
-      close: "Close",
-      goBack: "Go back",
-      cancel: "Cancel",
-      rootFolder: "Root",
-      noRecentFiles: "No recent files found"
-    },
-    bengali: {
-      search: "ফাইল খুঁজুন...",
-      createFolder: "নতুন ফোল্ডার তৈরি করুন",
-      uploadFile: "ফাইল আপলোড করুন",
-      folderName: "ফোল্ডারের নাম",
-      enterFolderName: "ফোল্ডারের নাম লিখুন",
-      selectFile: "একটি ফাইল নির্বাচন করুন",
-      create: "ফোল্ডার তৈরি করুন",
-      upload: "আপলোড",
-      class: "শ্রেণী",
-      description: "বিবরণ (ঐচ্ছিক)",
-      emptyFolder: "এই ফোল্ডারটি খালি",
-      emptyDescription: "এই স্থানটি পূরণ করতে ফাইল আপলোড করুন বা ফোল্ডার তৈরি করুন",
-      searchResults: "পাওয়া গেছে",
-      result: "ফলাফল",
-      results: "ফলাফল",
-      clear: "মুছে ফেলুন",
-      filePreview: "ফাইল প্রিভিউ",
-      close: "বন্ধ করুন",
-      goBack: "ফিরে যান",
-      cancel: "বাতিল",
-      rootFolder: "মূল ফোল্ডার",
-      noRecentFiles: "কোনও সাম্প্রতিক ফাইল পাওয়া যায়নি"
+  // Get batchId from localStorage on component mount
+  useEffect(() => {
+    const batchId = localStorage.getItem('batchId');
+    if (batchId) {
+      setSelectedBatch(batchId);
+    }
+  }, []);
+
+  const fetchContents = async (folderId?: string) => {
+    if (!selectedBatch) return;
+    
+    try {
+      const url = folderId 
+        ? `${BACKEND_URL}/api/folder/${selectedBatch}/folder/${folderId}`
+        : `${BACKEND_URL}/api/folder/${selectedBatch}`;
+      const response = await axios.get(url);
+      setFolders(response.data.folders);
+      setFiles(response.data.files);
+    } catch (error) {
+      console.error('Error fetching contents:', error);
     }
   };
 
-  const t = translations[language];
-
-  const recentFiles = [...currentViewFiles]
-    .filter(file => file.type === 'file')
-    .sort((a, b) => {
-      if (!a.lastModified || !b.lastModified) return 0;
-      return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
-    })
-    .slice(0, 5);
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<FileItemType[]>([]);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [fileDialogOpen, setFileDialogOpen] = useState(false);
-  const [folderDialogOpen, setFolderDialogOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileClass, setFileClass] = useState('');
-  const [fileDescription, setFileDescription] = useState('');
-  const [previewFile, setPreviewFile] = useState<FileItemType | null>(null);
-
-  const handleItemClick = (item: FileItemType) => {
-    if (item.type === 'folder') {
-      navigateTo([...item.path, item.name]);
-    } else {
-      // Preview file
-      setPreviewFile(item);
+  useEffect(() => {
+    if (selectedBatch) {
+      setCurrentFolder(null);
+      setPath([]);
+      fetchContents();
     }
+  }, [selectedBatch]);
+
+  const handleFolderClick = (folder: Folder) => {
+    setCurrentFolder(folder._id);
+    setPath([...path, { id: folder._id, name: folder.name }]);
+    fetchContents(folder._id);
+  };
+
+  const handleBreadcrumbClick = (index: number) => {
+    const newPath = path.slice(0, index + 1);
+    setPath(newPath);
+    const folderId = newPath[newPath.length - 1]?.id || null;
+    setCurrentFolder(folderId);
+    fetchContents(folderId || undefined);
   };
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      const results = searchFiles({ query: searchQuery, currentPath });
-      setSearchResults(results);
-    } else {
+    if (!searchQuery.trim()) {
       setSearchResults([]);
+      return;
     }
+
+    // UI-based search
+    const searchTerm = searchQuery.toLowerCase();
+    const results = files.filter(file => 
+      file.name.toLowerCase().includes(searchTerm)
+    );
+    setSearchResults(results);
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,111 +121,130 @@ const FileExplorer = () => {
     if (!e.target.value.trim()) {
       setSearchResults([]);
     } else {
-      // Real-time search
       handleSearch();
     }
   };
 
-  const handleCreateFolder = () => {
-    createFolder(newFolderName);
-    setNewFolderName('');
-    setFolderDialogOpen(false);
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 MB';
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(2)} MB`;
   };
 
-  const handleFileUpload = async () => {
-    if (!selectedFile) return;
+  const formatMimeType = (mimeType: string) => {
+    const mimeMap: { [key: string]: string } = {
+      'application/pdf': 'PDF',
+      'application/msword': 'DOC',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+      'application/vnd.ms-excel': 'XLS',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+      'application/vnd.ms-powerpoint': 'PPT',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPTX',
+      'image/jpeg': 'JPG',
+      'image/png': 'PNG',
+      'image/gif': 'GIF',
+      'text/plain': 'TXT',
+      'text/csv': 'CSV',
+      'application/zip': 'ZIP',
+      'application/x-rar-compressed': 'RAR',
+      'audio/mpeg': 'MP3',
+      'audio/wav': 'WAV',
+      'video/mp4': 'MP4',
+      'video/mpeg': 'MPEG',
+      'video/quicktime': 'MOV'
+    };
 
-    await uploadFile(selectedFile, { class: fileClass, description: fileDescription });
-
-    // Reset form
-    setSelectedFile(null);
-    setFileClass('');
-    setFileDescription('');
-    setFileDialogOpen(false);
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    setSelectedFile(files[0]);
+    return mimeMap[mimeType] || mimeType.split('/')[1].toUpperCase();
   };
 
   // Files to display: search results if there are any, otherwise current directory files
-  const filesToDisplay = searchResults.length > 0 ? searchResults : currentViewFiles;
+  const filesToDisplay = searchResults.length > 0 ? searchResults : files;
 
-  // Function to get appropriate component for file preview
+  const handleFileClick = (file: DriveFile) => {
+    setPreviewFile(file);
+    setIsPreviewOpen(true);
+  };
+
+  // const getPreviewUrl = (file: DriveFile) => {
+  //   if (file.mimeType === 'application/pdf') {
+  //     return file.url.replace(/\/(?:image|video|auto)?\/upload\//, '/raw/upload/');
+  //   }
+  //   return file.url;
+  // };
+
   const renderFilePreview = () => {
-    if (!previewFile || previewFile.type !== 'file') return null;
+    if (!previewFile) return null;
 
-    const extension = previewFile.extension?.toLowerCase();
-    const content = previewFile.content as string;
+    const mimeType = previewFile.mimeType;
+    // const url = getPreviewUrl(previewFile);
 
     // For images
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(extension || '')) {
-      return <img src={content} alt={previewFile.name} className="max-w-full max-h-[70vh] object-contain" />;
-    }
-
-    // For PDFs
-    if (extension === 'pdf') {
+    // if (mimeType.startsWith('image/')) {
       return (
-        <iframe
-          src={content}
-          className="w-full h-[70vh]"
-          title={previewFile.name}
+        <img 
+          src={previewFile.url} 
+          alt={previewFile.name} 
+          className="max-w-full max-h-[70vh] object-contain"
         />
       );
-    }
+    // }
+
+    // For PDFs
+    // if (mimeType === 'application/pdf') {
+    //   return (
+    //     <iframe
+    //       src={url}
+    //       className="w-full h-[70vh]"
+    //       title={previewFile.name}
+    //     />
+    //   );
+    // }
 
     // For videos
-    if (['mp4', 'webm', 'ogg'].includes(extension || '')) {
-      return (
-        <video controls className="w-full max-h-[70vh]">
-          <source src={content} type={`video/${extension}`} />
-          Your browser does not support the video tag.
-        </video>
-      );
-    }
+    // if (mimeType.startsWith('video/')) {
+    //   return (
+    //     <video controls className="w-full max-h-[70vh]">
+    //       <source src={url} type={mimeType} />
+    //       Your browser does not support the video tag.
+    //     </video>
+    //   );
+    // }
 
     // For audio
-    if (['mp3', 'wav', 'ogg'].includes(extension || '')) {
-      return (
-        <audio controls className="w-full">
-          <source src={content} type={`audio/${extension}`} />
-          Your browser does not support the audio tag.
-        </audio>
-      );
-    }
+    // if (mimeType.startsWith('audio/')) {
+    //   return (
+    //     <audio controls className="w-full">
+    //       <source src={url} type={mimeType} />
+    //       Your browser does not support the audio tag.
+    //     </audio>
+    //   );
+    // }
 
-    // For documents and other file types, offer download option
-    return (
-      <div className="flex flex-col items-center justify-center p-8">
-        <div className="text-center">
-          <p className="text-lg mb-4">This file type cannot be previewed</p>
-          <Button
-            onClick={() => {
-              const link = document.createElement('a');
-              link.href = content;
-              link.download = previewFile.name;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}
-          >
-            Download
-          </Button>
-        </div>
-      </div>
-    );
+    // For other file types, offer download option
+    // return (
+    //   <div className="flex flex-col items-center justify-center p-8">
+    //     <div className="text-center">
+    //       <p className="text-lg mb-4">This file type cannot be previewed</p>
+    //       <Button
+    //         onClick={() => {
+    //           window.open(url, '_blank');
+    //         }}
+    //       >
+    //         Download
+    //       </Button>
+    //     </div>
+    //   </div>
+    // );
   };
 
   return (
-    <div className=" w-full max-w-6xl mx-auto dark:bg-gray-900 dark:text-white">
-      <div className="fixed left-1/2 transform -translate-x-1/2 w-[92%] overflow-hidden pt-4 bg-white dark:bg-gray-900 rounded-lg">
+    <div className="w-full mx-auto dark:bg-gray-900 dark:text-white">
+      <div className="fixed left-1/2 transform -translate-x-1/2 w-[92%] md:container overflow-hidden pt-4 bg-white dark:bg-gray-900 rounded-lg">
         <div className='shadow-lg rounded-full overflow-hidden'>
           <SearchBar
             placeholder="Search files and folders..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchInputChange}
             className="w-full shadow-lg"
           />
         </div>
@@ -234,20 +253,24 @@ const FileExplorer = () => {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink onClick={() => navigateTo([])} className="dark:text-white flex items-center">
+                <BreadcrumbLink onClick={() => {
+                  setCurrentFolder(null);
+                  setPath([]);
+                  fetchContents();
+                }} className="dark:text-white flex items-center cursor-pointer">
                   <Home className="h-4 w-4 mr-1" />
                   Home
                 </BreadcrumbLink>
               </BreadcrumbItem>
 
-              {currentPath.map((path, index) => (
-                <BreadcrumbItem key={index}>
+              {path.map((item, index) => (
+                <BreadcrumbItem key={item.id}>
                   <BreadcrumbSeparator />
                   <BreadcrumbLink
-                    onClick={() => navigateTo(currentPath.slice(0, index + 1))}
-                    className="dark:text-white"
+                    onClick={() => handleBreadcrumbClick(index)}
+                    className="dark:text-white cursor-pointer"
                   >
-                    {path}
+                    {item.name}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               ))}
@@ -256,99 +279,87 @@ const FileExplorer = () => {
         </div>
       </div>
 
-      <section className="mb-8 p-8 pt-32">
-
-        {recentFiles.length > 0 ? (
-          <div className="space-y-2">
-            {recentFiles.map(file => (
-              <Card key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
-                <CardContent className="flex items-center justify-between p-0">
-                  <div className="flex items-center flex-row gap-2 w-[70%]">
-                    {/* {renderFileIcon(file)} */}
-                    <div className='p-2 border-r border-gray-700'>
-                      <img src={pdf_icon} alt="pdf_icon" className='h-12 w-12' />
-                    </div>
-
-                    <div className="w-[65%]">
-                      <h3 className="font-medium text-sm dark:text-white truncate">{file.name} </h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">In :
-                        {file.path.length > 0 ? file.path.join(' > ') : t.rootFolder}
-                      </p>
-                    </div>
-                  </div>
-                  <div className='flex flex-col mr-2'>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 flex justify-end">
-                      10:29 PM
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {/* {file.lastModified && getFormattedDate(file.lastModified)} */}
-                      May 22, 2025
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            <Card className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
+      <section className="mb-8 pt-32 container">
+        <div className="space-y-2">
+          {/* Folders */}
+          {folders.map((folder) => (
+            <Card 
+              key={folder._id} 
+              className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700 cursor-pointer"
+              onClick={() => handleFolderClick(folder)}
+            >
               <CardContent className="flex items-center justify-between p-0">
                 <div className="flex items-center flex-row gap-2 w-[70%]">
-                  {/* {renderFileIcon(file)} */}
-                  <div className='p-2 border-r border-gray-700'>
-                    <img src={doc_img} alt="pdf_icon" className='h-12 w-12' />
+                  <div className='p-2 border-r border-gray-200 dark:border-gray-700'>
+                    <img src={folder_img} alt="folder_icon" className='h-12 w-12' />
                   </div>
-
                   <div className="w-[65%]">
-                    <h3 className="font-medium text-sm dark:text-white truncate">name Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolore unde magni veritatis, mollitia eius illo! Omnis sed quibusdam ex distinctio!</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">In :
-                      Home
-                    </p>
+                    <h3 className="font-medium text-sm dark:text-white truncate">{folder.name}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Created by {folder.createdBy.name}</p>
                   </div>
                 </div>
                 <div className='flex flex-col mr-2'>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 flex justify-end">
-                    10:29 PM
-                  </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {/* {file.lastModified && getFormattedDate(file.lastModified)} */}
-                    May 22, 2025
+                    {new Date(folder.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </CardContent>
             </Card>
-            <Card  className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
+          ))}
+
+          {/* Files */}
+          {filesToDisplay.map((file) => (
+            <Card 
+              key={file._id} 
+              className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700 cursor-pointer"
+              onClick={() => handleFileClick(file)}
+            >
               <CardContent className="flex items-center justify-between p-0">
                 <div className="flex items-center flex-row gap-2 w-[70%]">
-                  {/* {renderFileIcon(file)} */}
-                  <div className='p-2 border-r border-gray-700'>
-                    <img src={folder_img} alt="pdf_icon" className='h-12 w-12' />
+                  <div className='p-2 border-r border-gray-200 dark:border-gray-700'>
+                    <img src={pdf_icon} alt="file_icon" className='h-12 w-12' />
                   </div>
-
                   <div className="w-[65%]">
-                    <h3 className="font-medium text-sm dark:text-white truncate">name Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolore unde magni veritatis, mollitia eius illo! Omnis sed quibusdam ex distinctio!</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">In :
-                     Home
-                    </p>
+                    <h3 className="font-medium text-sm dark:text-white truncate">{file.name}</h3>
+                    {/* <p className="text-xs text-gray-500 dark:text-gray-400">Uploaded by {file.uploadedBy.name}</p> */}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">File Size : {formatFileSize(file.size)}</p>
                   </div>
                 </div>
                 <div className='flex flex-col mr-2'>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 flex justify-end">
-                    10:29 PM
+                  <span className="text-xs">
+                    {formatMimeType(file.mimeType)}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {/* {file.lastModified && getFormattedDate(file.lastModified)} */}
-                    May 22, 2025
+                    {new Date(file.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        ) : (
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardContent className="p-6 text-center">
-              <p className="text-gray-500 dark:text-gray-400">{t.noRecentFiles}</p>
-            </CardContent>
-          </Card>
-        )}
+          ))}
+        </div>
       </section>
+
+      {/* File Preview Dialog */}
+      {isPreviewOpen && previewFile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
+              <h3 className="text-lg font-medium dark:text-white">{previewFile.name}</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsPreviewOpen(false)}
+                className="hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="p-4 overflow-auto max-h-[calc(90vh-4rem)]">
+              {renderFilePreview()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

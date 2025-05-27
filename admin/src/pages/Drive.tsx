@@ -135,17 +135,18 @@ const Drive = () => {
 
   const handleFileUpload = async () => {
     if (!selectedFile) return;
+    if (!selectedBatch) {
+      alert('Please select a batch before uploading a file.');
+      return;
+    }
 
     const formData = new FormData();
-    formData.append('file', selectedFile as Blob);
     formData.append('batchId', selectedBatch);
-    
-    // Always send folderId, even if it's null
     formData.append('folderId', currentFolder || '');
-    
     if (admin && admin._id) {
       formData.append('adminId', admin._id);
     }
+    formData.append('file', selectedFile as Blob); // <-- append file LAST
 
     try {
       const response = await axios.post(`${BACKEND_URL}/api/file/upload`, formData, {
@@ -156,7 +157,6 @@ const Drive = () => {
       console.log('Upload response:', response.data);
       setFileUploadDialog(false);
       setSelectedFile(null);
-      // Refresh the current folder contents
       fetchContents(currentFolder || undefined);
     } catch (error) {
       console.error('Error uploading file:', error);

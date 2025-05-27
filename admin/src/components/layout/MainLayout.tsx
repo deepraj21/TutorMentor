@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import Logo from '@/assets/brandLogo.png';
+import { Link } from 'react-router-dom';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -38,6 +39,12 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               </a>
             </div>
               <div className="flex items-center space-x-4">
+                <Link to="/drive" className='hidden md:block'>
+                Drive
+                </Link>
+                <Link to="/test" className='hidden md:block'>
+                Test
+                </Link>
               {
                 isLoggedIn ? (
                   <button

@@ -1,6 +1,7 @@
 import Batch from '../model/Batch.js';
 import User from '../model/User.js';
 import { generateBatchCode } from '../utils/BatchCodeGenerator.js';
+import { cloudinary } from '../utils/cloudinary.js';
 
 export const createBatch = async (req, res) => {
   try {
@@ -23,6 +24,10 @@ export const createBatch = async (req, res) => {
     });
 
     await batch.save();
+
+    // Create Cloudinary folder for this batch
+    await cloudinary.api.create_folder(`tutor-mentor/batch-${batch._id}`);
+
     res.status(201).json({ message: 'Batch created successfully', batch });
   } catch (error) {
     res.status(500).json({ message: 'Error creating batch', error: error.message });
@@ -149,4 +154,4 @@ export const deleteBatch = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error deleting batch', error: error.message });
   }
-}; 
+};

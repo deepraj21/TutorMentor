@@ -14,16 +14,17 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: (req) => {
-            // Get batch and folder information from request
+        folder: async (req, file) => {
             const { batchId, folderId } = req.body;
             let folderPath = `tutor-mentor/batch-${batchId}`;
-            
-            // If there's a folderId, we'll add it to the path
             if (folderId) {
-                folderPath += `/folder-${folderId}`;
+                // Get the folder path from the database
+                const Folder = (await import('../model/Folder.js')).default;
+                const folder = await Folder.findById(folderId);
+                if (folder) {
+                    folderPath = `tutor-mentor/batch-${batchId}/${folder.path}`;
+                }
             }
-            
             return folderPath;
         },
         allowed_formats: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png'],
@@ -39,4 +40,4 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-export { cloudinary, upload }; 
+export { cloudinary, upload };

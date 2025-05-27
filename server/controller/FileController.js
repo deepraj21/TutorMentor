@@ -5,6 +5,7 @@ import { cloudinary } from '../utils/cloudinary.js';
 export const uploadFile = async (req, res) => {
     try {
         const { batchId, folderId, adminId } = req.body;
+        console.log('Uploading file with data:', req.body);
 
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });
@@ -38,11 +39,10 @@ export const uploadFile = async (req, res) => {
 
         // Save the file
         const savedFile = await file.save();
-        console.log('Saved file:', savedFile); // Debug log
 
         res.status(201).json(savedFile);
     } catch (error) {
-        console.error('File upload error:', error); // Debug log
+        console.error('File upload error:', error);
         if (error.code === 11000) {
             res.status(400).json({ message: 'A file with this name already exists in this location' });
         } else {

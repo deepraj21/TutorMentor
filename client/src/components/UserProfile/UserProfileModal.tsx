@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
@@ -7,15 +6,69 @@ import { Switch } from "@/components/ui/switch";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from "@/contexts/AuthContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useState } from "react";
 
 interface UserProfileModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"
+
+interface Batch {
+  _id: string;
+  name: string;
+  batchCode: string;
+  createdBy: string;
+  students: {
+    student: string;
+    status: string;
+    _id: string;
+  }[];
+  createdAt: string;
+  __v: number;
+}
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  status: string;
+  recent_files: any[];
+  __v: number;
+  batch: Batch;
+}
+
+interface BatchDetails {
+  batchId: string;
+  batchName: string;
+}
+
+interface ProfileData {
+  user: User;
+  batchDetails: BatchDetails;
+}
+
 const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
   const { user, isLoggedIn, signOut } = useAuth()
   const { theme, toggleTheme, language, setLanguage } = useTheme();
+
+  const studentId = localStorage.getItem("studentId");
+
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!studentId) return;
+    setLoading(true);
+    axios.get(`${BACKEND_URL}/api/auth/get-data/${studentId}`)
+      .then(res => {
+        setProfileData(res.data);
+        localStorage.setItem('batchId',res.data.batchDetails.batchId)
+      })
+      .catch(() => setProfileData(null))
+      .finally(() => setLoading(false));
+  }, [studentId, open]);
 
   const translations = {
     english: {
@@ -65,12 +118,19 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
                   <div className='flex flex-col w-full'>
                     <div className="space-y-1">
                       <Label>{t.name}</Label>
-                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">{user.displayName || "User"}</div>
+                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">{user.displayName || profileData?.user?.name || "User"}</div>
                     </div>
 
                     <div className="space-y-1">
                       <Label>{t.email}</Label>
-                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">{user.email || "Email"}</div>
+                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">{user.email || profileData?.user?.email || "Email"}</div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>{t.class}</Label>
+                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                        {loading ? "Loading..." : (profileData?.batchDetails?.batchName || "N/A")}
+                      </div>
                     </div>
                   </div>
                 </div>
