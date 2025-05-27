@@ -1,0 +1,40 @@
+import axios from 'axios';
+import { Test, CreateTestData, UpdateTestData } from '../types/test';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
+// Test APIs
+export const createTest = async (data: CreateTestData): Promise<Test> => {
+    const response = await axios.post(`${API_URL}/test`, data);
+    return response.data;
+};
+
+export const updateTest = async (id: string, data: UpdateTestData): Promise<Test> => {
+    const response = await axios.put(`${API_URL}/test/${id}`, data);
+    return response.data;
+};
+
+export const publishTest = async (id: string, adminId: string): Promise<Test> => {
+    const response = await axios.put(`${API_URL}/test/${id}/publish`, { adminId });
+    return response.data;
+};
+
+export const startTest = async (id: string, adminId: string): Promise<Test> => {
+    const response = await axios.put(`${API_URL}/test/${id}/start`, { adminId });
+    return response.data;
+};
+
+export const endTest = async (id: string, adminId: string): Promise<Test> => {
+    const response = await axios.put(`${API_URL}/test/${id}/end`, { adminId });
+    return response.data;
+};
+
+export const getBatchTests = async (batchId: string): Promise<Test[]> => {
+    const response = await axios.get(`${API_URL}/test/batch/${batchId}`);
+    return response.data;
+};
+
+export const getTest = async (id: string): Promise<Test> => {
+    const response = await axios.get(`${API_URL}/test/${id}`);
+    return response.data;
+}; 

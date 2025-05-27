@@ -42,8 +42,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 <Link to="/drive" className='hidden md:block'>
                 Drive
                 </Link>
-                <Link to="/test" className='hidden md:block'>
-                Test
+                <Link to="/tests" className='hidden md:block'>
+                Tests
                 </Link>
               {
                 isLoggedIn ? (

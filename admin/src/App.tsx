@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
-// import TestsPage from "./pages/TestsPage";
+import Tests from "./pages/Tests";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SignIn } from "./pages/SignIn";
@@ -31,6 +31,7 @@ function AppRoutes() {
         }
       />
       <Route path="/drive" element={<Drive />} />
+      <Route path="/tests" element={<Tests />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
