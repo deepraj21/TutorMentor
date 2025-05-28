@@ -104,9 +104,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
               <DialogHeader>
                 <DialogTitle className="text-xl font-semibold">{t.profile}</DialogTitle>
               </DialogHeader>
-
               <div className="flex flex-col items-center py-4">
-
                 <div className='flex flex-row gap-4 w-full items-center'>
                   <Avatar className="h-24 w-24">
                     <AvatarImage src={user?.photoURL || ""} alt={user?.displayName || "User"} />

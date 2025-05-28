@@ -46,13 +46,13 @@ const MobileNavigation = () => {
           <span className="text-xs mt-1">Tests</span>
         </Link>
         <Link
-          to="/chat"
+          to="/tutor-ai"
           className={`flex flex-col items-center justify-center w-full h-full ${
-            isActive('/chat') ? 'text-tutor-primary' : 'text-gray-500'
+            isActive('/tutor-ai') ? 'text-tutor-primary' : 'text-gray-500'
           }`}
         >
           <MessageSquareDotIcon className="h-5 w-5" />
-          <span className="text-xs mt-1">Chat</span>
+          <span className="text-xs mt-1">Tutor AI</span>
         </Link>
       </div>
     </div>

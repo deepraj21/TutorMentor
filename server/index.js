@@ -7,6 +7,7 @@ import batchRoutes from './routes/Batch.js';
 import folderRoutes from './routes/Folder.js';
 import fileRoutes from './routes/File.js';
 import testRoutes from './routes/Test.js';
+import aiRoutes from './routes/AI.js';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/batch', batchRoutes);
 app.use('/api/folder', folderRoutes);
 app.use('/api/file', fileRoutes);
 app.use('/api/test', testRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

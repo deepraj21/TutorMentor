@@ -10,6 +10,7 @@ import DrivePage from "./pages/DrivePage";
 import TestsPage from "./pages/TestsPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/contexts/AuthContext";
+import {TutorAi} from "./pages/TutorAi";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/" element={<HomePage />} />
             <Route path="/drive" element={<DrivePage />} />
             <Route path="/tests" element={<TestsPage />} />
+              <Route path="/tutor-ai" element={<TutorAi />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </MainLayout>

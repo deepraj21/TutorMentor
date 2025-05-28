@@ -95,6 +95,15 @@
     @apply border-border;
   }
 
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   body {
     @apply bg-background text-foreground;
   }

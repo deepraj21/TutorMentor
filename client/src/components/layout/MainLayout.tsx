@@ -33,7 +33,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 </a>
               </div>
               <div className="flex items-center space-x-4">
-                <div className='md:flex items-center gap-4 hidden'>
+                <div className='md:flex items-center gap-8 hidden'>
                   <Link to="/" className='flex items-center hover:text-tutor-primary gap-1'><Home className='h-4 w-4' /> Home</Link>
                   <Link to="/drive" className='flex items-center hover:text-tutor-primary gap-1'><Inbox className='h-4 w-4' />Drive</Link>
                   <Link to="/tests" className='flex items-center hover:text-tutor-primary gap-1'><FileArchiveIcon className='h-4 w-4' /> Tests</Link>
