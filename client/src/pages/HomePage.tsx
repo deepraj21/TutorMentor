@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useFileSystem } from '@/contexts/FileSystemContext';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileItem as FileItemType } from '@/types';
-import { File, Folder, Clock, ArrowRight, FileText, Search, LayoutGrid } from 'lucide-react';
+import { File, Folder, Clock, ArrowRight, FileText, Search, LayoutGrid, Lock, CheckCircle2 } from 'lucide-react';
 import { getFormattedDate } from '@/utils/fileUtils';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -20,6 +20,9 @@ import pdf_icon from "@/assets/pdf_icon.webp"
 import axios from "axios";
 import joingBatchImg from "@/assets/join-batch.webp"
 import pendingImg from "@/assets/pending.webp"
+import { Test } from '@/types/test';
+import { getBatchTests } from '@/utils/api';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +47,7 @@ const HomePage = () => {
   const { language } = useTheme();
   const { user, isLoggedIn, signIn } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [tests, setTests] = useState<Test[]>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -62,6 +66,24 @@ const HomePage = () => {
       fetchUserData();
     }
   }, [isLoggedIn, user]);
+
+  useEffect(() => {
+    const loadTests = async () => {
+      try {
+        const batchId = localStorage.getItem('batchId');
+        if (batchId) {
+          const data = await getBatchTests(batchId);
+          setTests(data.slice(0, 3)); // Get only latest 3 tests
+        }
+      } catch (error) {
+        toast.error('Failed to load tests');
+      }
+    };
+
+    if (userData?.status === "Accepted") {
+      loadTests();
+    }
+  }, [userData?.status]);
 
   const translations = {
     english: {
@@ -102,12 +124,6 @@ const HomePage = () => {
     })
     .slice(0, 5);
 
-
-  const testPapers = files.filter(file =>
-    file.type === 'file' &&
-    file.extension?.toLowerCase() === 'pdf'
-  ).slice(0, 3);
-
   // Get top-level folders
   const folders = files.filter(file =>
     file.type === 'folder' &&
@@ -124,6 +140,27 @@ const HomePage = () => {
       return <Folder className="h-5 w-5 text-tutor-primary dark:text-tutor-accent" />;
     }
     return <File className="h-5 w-5 text-tutor-secondary dark:text-tutor-secondary" />;
+  };
+
+  const getTestStatus = (test: Test) => {
+    if (test.status === 'draft') return 'Draft';
+    if (test.status === 'published') return 'Locked';
+    if (test.status === 'started') return 'Active';
+    if (test.status === 'ended') return 'Ended';
+    return test.status;
+  };
+
+  const getTestStatusIcon = (test: Test) => {
+    switch (test.status) {
+      case 'published':
+        return <Lock className="h-4 w-4" />;
+      case 'started':
+        return <Clock className="h-4 w-4" />;
+      case 'ended':
+        return <CheckCircle2 className="h-4 w-4" />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -164,7 +201,7 @@ const HomePage = () => {
               userData?.status === "Rejected" && (
                 <div className='h-[calc(100vh-12rem)] flex items-center justify-center flex-col'>
                   <img src={pendingImg} />
-                  <p className='text-gray-500 dark:text-gray-400'>Your request has been rejected. Please contact support.</p>
+                  <p className="text-gray-500 dark:text-gray-400">Your request has been rejected. Please contact support.</p>
                 </div>
               )
             }
@@ -248,7 +285,6 @@ const HomePage = () => {
                           <Card key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
                             <CardContent className="flex items-center justify-between p-0">
                               <div className="flex items-center flex-row gap-2 w-[70%]">
-                                {/* {renderFileIcon(file)} */}
                                 <div className='p-2 border-r dark:border-gray-700 border-gray-200'>
                                   <img src={pdf_icon} alt="pdf_icon" className='h-12 w-12' />
                                 </div>
@@ -295,27 +331,39 @@ const HomePage = () => {
                       </Link>
                     </div>
 
-                    {testPapers.length > 0 ? (
+                    {tests.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {testPapers.map(paper => (
-                          <Card key={paper.id} className="overflow-hidden hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700">
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-lg flex items-center gap-2 dark:text-white">
-                                <File className="h-5 w-5 text-tutor-primary dark:text-tutor-accent" />
-                                {paper.name}
+                        {tests.map((test) => (
+                          <Card key={test._id} className="hover:shadow-md transition-shadow h-full dark:bg-gray-800 dark:border-gray-700">
+                            <CardHeader className='border-b dark:border-gray-700 p-4'>
+                              <CardTitle className="flex items-center justify-between">
+                                <span className='w-[70%] truncate'>{test.title}</span>
+                                <div
+                                  className={`
+                                    flex text-sm font-normal gap-1 items-center rounded-full pl-2 pr-1
+                                    ${test.status === 'published'
+                                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                      : test.status === 'started'
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                        : test.status === 'ended'
+                                          ? 'bg-blue-200 text-blue-800 dark:bg-blue-700 dark:text-blue-200'
+                                          : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
+                                    }
+                                  `}
+                                >
+                                  {getTestStatus(test)}
+                                  {getTestStatusIcon(test)}
+                                </div>
                               </CardTitle>
+                              <p className="text-sm text-gray-500 mb-4 w-full truncate">{test.description}</p>
                             </CardHeader>
-                            <CardContent className="pb-2">
-                              <p className="text-sm text-gray-600 truncate dark:text-gray-400">
-                                {paper.path.length > 0 ? `In: ${paper.path.join(' > ')}` : t.rootFolder}
-                              </p>
+                            <CardContent className="flex flex-row py-6 p-4 justify-between">
+                              <div className="space-y-2">
+                                <p>Total Questions: <span className="font-semibold">{test.questions.length}</span></p>
+                                <p>Total Marks: <span className="font-semibold">{test.totalMarks}</span></p>
+                              </div>
+                              <p>Duration: <span className="font-semibold">{test.duration} </span>min</p>
                             </CardContent>
-                            <CardFooter className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                              <span>
-                                {paper.lastModified && getFormattedDate(paper.lastModified)}
-                              </span>
-                              <button className="text-tutor-primary dark:text-tutor-accent hover:underline">{t.viewAll}</button>
-                            </CardFooter>
                           </Card>
                         ))}
                       </div>

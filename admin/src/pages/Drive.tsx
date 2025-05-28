@@ -154,7 +154,6 @@ const Drive = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Upload response:', response.data);
       setFileUploadDialog(false);
       setSelectedFile(null);
       fetchContents(currentFolder || undefined);

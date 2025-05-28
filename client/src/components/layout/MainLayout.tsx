@@ -1,14 +1,14 @@
-
 import React, { useState } from 'react';
 import MobileNavigation from './MobileNavigation';
 import { FileSystemProvider } from '@/contexts/FileSystemContext';
-import { UserCircle } from 'lucide-react';
+import { Bot, FileArchiveIcon, Home, Inbox, MessageSquareDot, MessageSquareDotIcon, UserCircle } from 'lucide-react';
 import UserProfileModal from '../UserProfile/UserProfileModal';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useAuth } from "@/contexts/AuthContext"
 import google_img from "@/assets/google.png"
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import Logo from "@/assets/brandLogo.png"
+import { Link } from 'react-router-dom';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -32,14 +32,21 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                   </div>
                 </a>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="md:flex items-center space-x-4 hidden">
+                <div className='flex items-center gap-4'>
+                  <Link to="/" className='flex items-center hover:text-tutor-primary gap-1'><Home className='h-4 w-4' /> Home</Link>
+                  <Link to="/drive" className='flex items-center hover:text-tutor-primary gap-1'><Inbox className='h-4 w-4' />Drive</Link>
+                  <Link to="/tests" className='flex items-center hover:text-tutor-primary gap-1'><FileArchiveIcon className='h-4 w-4' /> Tests</Link>
+                  <Link to="/tutor-ai" className='flex items-center hover:text-tutor-primary gap-1'><Bot className="h-4 w-4" /> Tutor AI</Link>
+                  <Link to="/chats" className='flex items-center hover:text-tutor-primary gap-1'><MessageSquareDot className="h-4 w-4" /> Chats</Link>
+                </div>
                 {
                   isLoggedIn ? (
                     <button
                       onClick={() => setIsProfileOpen(true)}
                       className="rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 p-1"
                     >
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-9 w-9">
                         <AvatarImage src={user?.photoURL || ""} alt={user?.displayName || "User"} />
                         <AvatarFallback className="bg-tutor-primary text-white text-xl">
                           {user?.displayName ? user.displayName.charAt(0) : "U"}

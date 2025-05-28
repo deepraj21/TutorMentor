@@ -5,7 +5,6 @@ import { cloudinary } from '../utils/cloudinary.js';
 export const uploadFile = async (req, res) => {
     try {
         const { batchId, folderId, adminId } = req.body;
-        console.log('Uploading file with data:', req.body);
 
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });

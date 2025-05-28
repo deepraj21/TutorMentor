@@ -7,7 +7,9 @@ import {
     submitTest,
     endTest,
     getBatchTests,
-    getTest
+    getTest,
+    getTestResults,
+    deleteTest
 } from '../controller/Test.js';
 
 const router = express.Router();
@@ -33,7 +35,13 @@ router.post('/:id/submit', submitTest);
 // Get all tests for a batch
 router.get('/batch/:batchId', getBatchTests);
 
+// Get test results
+router.get('/:id/results', getTestResults);
+
 // Get a single test
 router.get('/:id', getTest);
+
+// Delete a test (admin only)
+router.delete('/:id', deleteTest);
 
 export default router; 

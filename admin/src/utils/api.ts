@@ -37,4 +37,14 @@ export const getBatchTests = async (batchId: string): Promise<Test[]> => {
 export const getTest = async (id: string): Promise<Test> => {
     const response = await axios.get(`${API_URL}/test/${id}`);
     return response.data;
+};
+
+export const getTestResults = async (testId: string) => {
+    const response = await axios.get(`${API_URL}/test/${testId}/results`);
+    return response.data;
+};
+
+export const deleteTest = async (testId: string, adminId: string) => {
+    const response = await axios.delete(`${API_URL}/test/${testId}`, { data: { adminId } }); 
+    return response.data;
 }; 

@@ -6,8 +6,6 @@ export const createFolder = async (req, res) => {
     try {
         const { name, batchId, adminId, parentFolderId } = req.body;
 
-        console.log('Creating folder with data:', req.body);
-
         if (!batchId) {
             return res.status(400).json({ message: 'batchId is required' });
         }

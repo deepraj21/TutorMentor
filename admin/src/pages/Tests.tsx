@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Test, Question } from '@/types/test';
-import { getBatchTests, createTest, publishTest, startTest, endTest, updateTest } from '@/utils/api';
+import { getBatchTests, createTest, publishTest, startTest, endTest, updateTest, deleteTest } from '@/utils/api';
 import { useToast } from '@/components/ui/use-toast';
 import { TestQuestionForm } from '@/components/TestQuestionForm';
 import { useAuth } from "@/contexts/AuthContext";
 import axios from 'axios';
+import { TestLeaderboard } from '@/components/TestLeaderboard';
 
 interface Batch {
     _id: string;
@@ -28,6 +29,7 @@ export default function Tests() {
     const [batches, setBatches] = useState<Batch[]>([]);
     const [selectedBatch, setSelectedBatch] = useState<string>('');
     const [editingTest, setEditingTest] = useState<Test | null>(null);
+    const [selectedTest, setSelectedTest] = useState<Test | null>(null);
     const [newTest, setNewTest] = useState({
         title: '',
         description: '',
@@ -121,6 +123,28 @@ export default function Tests() {
                 description: 'Failed to update test. Please try again.',
                 variant: 'destructive'
             });
+        }
+    };
+
+    const handleDeleteTest = async (testId: string) => {
+        if (!admin?._id) return;
+
+        if (window.confirm('Are you sure you want to delete this test?')) {
+            try {
+                await deleteTest(testId, admin._id);
+                toast({
+                    title: 'Success',
+                    description: 'Test deleted successfully'
+                });
+                loadTests(selectedBatch);
+            } catch (error) {
+                console.error('Error deleting test:', error);
+                toast({
+                    title: 'Error',
+                    description: 'Failed to delete test. Only draft tests can be deleted.',
+                    variant: 'destructive'
+                });
+            }
         }
     };
 
@@ -363,6 +387,7 @@ export default function Tests() {
                                         duration: 60,
                                         questions: []
                                     });
+                                    setSelectedTest(null);
                                 }}
                             >
                                 Cancel Edit
@@ -466,6 +491,12 @@ export default function Tests() {
                                             <>
                                                 <Button onClick={() => handleEditTest(test)}>Edit</Button>
                                                 <Button onClick={() => handlePublishTest(test._id)}>Publish</Button>
+                                                <Button 
+                                                    variant="destructive"
+                                                    onClick={() => handleDeleteTest(test._id)}
+                                                >
+                                                    Delete
+                                                </Button>
                                             </>
                                         )}
                                         {test.status === 'published' && (
@@ -474,11 +505,19 @@ export default function Tests() {
                                         {test.status === 'started' && (
                                             <Button onClick={() => handleEndTest(test._id)}>End</Button>
                                         )}
+                                        {test.status === 'ended' && (
+                                            <Button onClick={() => setSelectedTest(test)}>View Results</Button>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
                         ))}
                     </div>
+                    {selectedTest?.status === 'ended' && selectedTest.submissions.length > 0 && (
+                        <div className="mt-8">
+                            <TestLeaderboard testId={selectedTest._id} />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

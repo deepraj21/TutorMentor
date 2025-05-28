@@ -253,9 +253,9 @@ export const endTest = async (req, res) => {
             
             await sendEmail({
                 to: student.email,
-                subject: `Final Test Results: ${test.title}`,
+                subject: `Test Results: ${test.title}`,
                 html: `
-                    <h1>Final Test Results</h1>
+                    <h1>Test Results</h1>
                     <p>Test: ${test.title}</p>
                     <p>Batch: ${batch.name}</p>
                     <p>Your Score: ${submission.totalMarksObtained}/${test.totalMarks}</p>
@@ -302,14 +302,73 @@ export const getTest = async (req, res) => {
         }
 
         // If user is a student, don't send correct answers
-        if (req.user.role === 'student' && test.status !== 'ended') {
-            test.questions = test.questions.map(q => ({
-                ...q.toObject(),
-                correctAnswer: undefined
-            }));
-        }
+        // if (req.user.role === 'student' && test.status !== 'ended') {
+        //     test.questions = test.questions.map(q => ({
+        //         ...q.toObject(),
+        //         correctAnswer: undefined
+        //     }));
+        // }
 
         res.json(test);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get test results with student details
+export const getTestResults = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const test = await Test.findById(id)
+            .populate('submissions.student', 'name email')
+            .populate('batch', 'name');
+
+        if (!test) {
+            return res.status(404).json({ message: 'Test not found' });
+        }
+
+        // Sort submissions by marks obtained
+        const sortedSubmissions = test.submissions.sort((a, b) => b.totalMarksObtained - a.totalMarksObtained);
+
+        res.json({
+            test: {
+                title: test.title,
+                totalMarks: test.totalMarks,
+                status: test.status
+            },
+            submissions: sortedSubmissions
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Delete a test
+export const deleteTest = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { adminId } = req.body; // Assuming adminId is sent in the body for verification
+
+        const test = await Test.findById(id);
+
+        if (!test) {
+            return res.status(404).json({ message: 'Test not found' });
+        }
+
+        // Verify admin and ownership
+        await verifyAdmin(adminId);
+        if (test.createdBy.toString() !== adminId) {
+            return res.status(403).json({ message: 'Not authorized to delete this test' });
+        }
+
+        // Only allow deleting draft tests to avoid issues with ongoing/ended tests
+        if (test.status !== 'draft') {
+            return res.status(400).json({ message: 'Only draft tests can be deleted' });
+        }
+
+        await Test.findByIdAndDelete(id);
+
+        res.json({ message: 'Test deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
