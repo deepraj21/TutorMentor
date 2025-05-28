@@ -1,26 +1,26 @@
 import axios from 'axios';
 import { Test, SubmitTestData } from '@/types/test';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
 // Test APIs
 export const getBatchTests = async (batchId: string): Promise<Test[]> => {
-    const response = await axios.get(`${API_URL}/test/batch/${batchId}`);
+    const response = await axios.get(`${API_URL}/api/test/batch/${batchId}`);
     return response.data;
 };
 
 export const getTest = async (id: string): Promise<Test> => {
-    const response = await axios.get(`${API_URL}/test/${id}`);
+    const response = await axios.get(`${API_URL}/api/test/${id}`);
     return response.data;
 };
 
 export const submitTest = async (testId: string, data: SubmitTestData): Promise<{ message: string; totalMarksObtained: number }> => {
-    const response = await axios.post(`${API_URL}/test/${testId}/submit`, data);
+    const response = await axios.post(`${API_URL}/api/test/${testId}/submit`, data);
     return response.data;
 };
 
 export const getTestResults = async (testId: string, userId: string) => {
-    const response = await axios.get(`${API_URL}/test/${testId}/results`);
+    const response = await axios.get(`${API_URL}/api/test/${testId}/results`);
     const data = response.data;
     
     // Find the student's submission
