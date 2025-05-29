@@ -11,6 +11,7 @@ import tutormentor from "@/assets/tutor-mentor.png"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useTheme } from "@/contexts/ThemeContext"
 
 
 interface ChatMessage {
@@ -27,8 +28,45 @@ interface ChatPreview {
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"
 
+const translations = {
+  english: {
+    newChat: 'New Chat',
+    history: 'History',
+    searchChats: 'Search chats...',
+    noChatsFound: 'No chats found.',
+    loadingChats: 'Loading chats...',
+    welcome: 'Welcome to Tutor AI',
+    whatToKnow: 'what would you like to know?',
+    thinking: 'Thinking...',
+    copy: 'copy',
+    copied: 'copied',
+    export: 'export',
+    typeMessage: 'Type your message...',
+    send: 'Send',
+    hiThere: 'Hi there'
+  },
+  bengali: {
+    newChat: 'নতুন চ্যাট',
+    history: 'ইতিহাস',
+    searchChats: 'চ্যাট খুঁজুন...',
+    noChatsFound: 'কোন চ্যাট পাওয়া যায়নি।',
+    loadingChats: 'চ্যাট লোড হচ্ছে...',
+    welcome: 'টিউটর এআই তে স্বাগতম',
+    whatToKnow: 'আপনি কি জানতে চান?',
+    thinking: 'চিন্তা করছি...',
+    copy: 'কপি',
+    copied: 'কপি করা হয়েছে',
+    export: 'এক্সপোর্ট',
+    typeMessage: 'আপনার বার্তা টাইপ করুন...',
+    send: 'পাঠান',
+    hiThere: 'হ্যালো'
+  }
+};
+
 export function TutorAi() {
     const { user } = useAuth()
+    const { language } = useTheme()
+    const t = translations[language]
     const studentId = localStorage.getItem("studentId")
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>(() => {
         const savedChats = localStorage.getItem("chatHistory")
@@ -184,7 +222,7 @@ export function TutorAi() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    email: user.email,
+                    userId: studentId,
                 }),
             });
 
@@ -341,7 +379,7 @@ export function TutorAi() {
             <div className="flex flex-row container mx-auto px-4 py-4 items-center justify-between relative">
                 <div className="flex flex-row items-center gap-4">
                     <div className="cursor-pointer flex items-center gap-2 text-sm p-1 border bg-secondary rounded-lg hover:bg-transparent" onClick={handleNewChat}>
-                        <span className="hidden md:flex">New Chat</span>
+                        <span className="hidden md:flex">{t.newChat}</span>
                         <Plus className="h-4 w-4 opacity-70 hover:opacity-100" />
                     </div>
                     <div className="flex items-center gap-2 text-sm p-1 border bg-secondary rounded-lg">
@@ -370,23 +408,23 @@ export function TutorAi() {
                     <Popover open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
                         <PopoverTrigger asChild>
                             <div className="hover:bg-transparent flex items-center gap-2 text-sm p-1 border bg-secondary rounded-lg">
-                                <span className="hidden md:flex">History</span>
+                                <span className="hidden md:flex">{t.history}</span>
                                 <History className="h-4 w-4 opacity-70 hover:opacity-100" />
                             </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-[250px] mt-2 p-0" align="end">
                             <Command className="shadow-md">
                                 <CommandInput
-                                    placeholder="Search chats..."
+                                    placeholder={t.searchChats}
                                     value={searchQuery}
                                     onValueChange={setSearchQuery}
                                     className="h-9"
                                 />
                                 <CommandList>
-                                    <CommandEmpty>No chats found.</CommandEmpty>
+                                    <CommandEmpty>{t.noChatsFound}</CommandEmpty>
                                     <CommandGroup>
                                         {loading ? (
-                                            <div className="py-6 text-center text-sm text-muted-foreground">Loading chats...</div>
+                                            <div className="py-6 text-center text-sm text-muted-foreground">{t.loadingChats}</div>
                                         ) : filteredChats.length > 0 ? (
                                             Object.entries(groupChatsByDate(filteredChats)).map(([date, chats]) => (
                                                 <div key={date}>
@@ -437,9 +475,9 @@ export function TutorAi() {
                 {chatHistory.length == 0 && (
                     <div className="flex items-start justify-end h-full flex-col gap-2 py-4">
                         <img src={tutormentor} alt="tutor-mentor-logo" className="h-20 w-20 dark:invert" />
-                        <span className="text-2xl">Hi there, {user.displayName}</span>
-                        <span className="text-3xl">Welcome to Tutor AI</span>
-                        <span className="text-sm">what would you like to know?</span>
+                        <span className="text-2xl">{t.hiThere}, {user.displayName}</span>
+                        <span className="text-3xl">{t.welcome}</span>
+                        <span className="text-sm">{t.whatToKnow}</span>
                     </div>
                 )}
                 {chatHistory.length > 0 && (
@@ -602,7 +640,7 @@ export function TutorAi() {
                                                     onClick={() => handleExport(message)}
                                                 >
                                                     <FileDownIcon className="h-3 w-3 mr-1" />
-                                                    export
+                                                    {t.export}
                                                 </button>
                                                 <div className="ml-auto flex items-center gap-1">
                                                     <button
@@ -614,12 +652,12 @@ export function TutorAi() {
                                                                 <span className="text-green-400">
                                                                     <Check className="mr-1 h-3 w-3" />
                                                                 </span>{" "}
-                                                                copied
+                                                                {t.copied}
                                                             </>
                                                         ) : (
                                                             <>
                                                                 <Copy className="h-3 w-3 mr-1" />
-                                                                copy
+                                                                {t.copy}
                                                             </>
                                                         )}
                                                     </button>
@@ -631,7 +669,7 @@ export function TutorAi() {
                             </div>
                         ))}
 
-                        {isWaiting && !isStreaming && <div className="text-zinc-400 text-sm italic">{loadingText}</div>}
+                        {isWaiting && !isStreaming && <div className="text-zinc-400 text-sm italic">{t.thinking}</div>}
 
                         {isStreaming && (
                             <div className="text-[15px]">
@@ -741,7 +779,7 @@ export function TutorAi() {
             <div className="container relative px-4">
                 <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700">
                     <Textarea
-                        placeholder="Type your message..."
+                        placeholder={t.typeMessage}
                         onChange={(e) => setUserMessage(e.target.value)}
                         value={userMessage}
                         disabled={isWaiting}
@@ -765,14 +803,12 @@ export function TutorAi() {
                             onClick={() => handleSendMessage(userMessage)}
                             disabled={isWaiting || !userMessage.trim()}
                         >
-                            <span className="-mr-2">Send</span>
+                            <span className="-mr-2">{t.send}</span>
                             <CornerRightUp />
                         </Button>
-
                     </div>
                 </div>
             </div>
-
         </>
     )
 }

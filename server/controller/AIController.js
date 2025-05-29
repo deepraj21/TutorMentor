@@ -104,10 +104,11 @@ export const getChatById = async (req, res) => {
 
 // Delete specific chat
 export const deleteChatById = async (req, res) => {
+  const { userId } = req.body;
   try {
     const deletedChat = await Chat.findOneAndDelete({ 
       _id: req.params.chatId, 
-      userId: req.user._id 
+      userId
     });
 
     if (!deletedChat) {
