@@ -1,5 +1,6 @@
 import User from '../model/User.js';
 import Admin from '../model/Admin.js';
+import { sendEmail, emailTemplates } from '../utils/email.js';
 
 export const authenticateUser = async (req, res) => {
   const { name, email } = req.body;
@@ -14,6 +15,13 @@ export const authenticateUser = async (req, res) => {
 
       user = new User({ name, email, status: 'NoBatch' });
       await user.save();
+
+      await sendEmail({
+        to: email,
+        subject: 'Welcome to TutorMentor!',
+        html: emailTemplates.welcome(name)
+      });
+
       return res.status(200).json({ message: 'Authentication successful', user });
     } catch (error) {
       return res.status(500).json({ message: 'Error saving user', error: error.message });

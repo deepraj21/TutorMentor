@@ -301,14 +301,6 @@ export const getTest = async (req, res) => {
             return res.status(404).json({ message: 'Test not found' });
         }
 
-        // If user is a student, don't send correct answers
-        // if (req.user.role === 'student' && test.status !== 'ended') {
-        //     test.questions = test.questions.map(q => ({
-        //         ...q.toObject(),
-        //         correctAnswer: undefined
-        //     }));
-        // }
-
         res.json(test);
     } catch (error) {
         res.status(500).json({ message: error.message });

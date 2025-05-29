@@ -1,7 +1,9 @@
 import Batch from '../model/Batch.js';
 import User from '../model/User.js';
+import Admin from '../model/Admin.js';
 import { generateBatchCode } from '../utils/BatchCodeGenerator.js';
 import { cloudinary } from '../utils/cloudinary.js';
+import { sendEmail, emailTemplates } from '../utils/email.js';
 
 export const createBatch = async (req, res) => {
   try {
@@ -56,10 +58,22 @@ export const joinBatch = async (req, res) => {
     });
     await batch.save();
 
+    const student = await User.findById(studentId);
     await User.findByIdAndUpdate(studentId, { 
       batch: batch._id,
       status: 'Pending' 
     });
+
+    // Get admin email
+    const admin = await Admin.findById(batch.createdBy);
+    if (admin) {
+      // Send email to admin about new join request
+      await sendEmail({
+        to: admin.email,
+        subject: 'New Batch Join Request',
+        html: emailTemplates.batchRequest(student.name, student.email, batch.name)
+      });
+    }
 
     res.status(200).json({ message: 'Join request sent successfully' });
   } catch (error) {
@@ -92,7 +106,16 @@ export const updateStudentStatus = async (req, res) => {
     await batch.save();
 
     // Update user's status
-    await User.findByIdAndUpdate(studentId, { status });
+    const student = await User.findByIdAndUpdate(studentId, { status }, { new: true });
+
+    // If status is approved, send congratulation email
+    if (status === 'Approved' && student) {
+      await sendEmail({
+        to: student.email,
+        subject: 'Batch Join Request Approved!',
+        html: emailTemplates.batchApproved(student.name, batch.name)
+      });
+    }
 
     res.status(200).json({ message: 'Student status updated successfully' });
   } catch (error) {
