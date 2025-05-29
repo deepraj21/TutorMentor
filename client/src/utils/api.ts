@@ -32,4 +32,14 @@ export const getTestResults = async (testId: string, userId: string) => {
         test: data.test,
         submission: studentSubmission
     };
+};
+
+export const updateRecentFiles = async (userId: string, fileId: string) => {
+  try {
+    const response = await axios.put(`${API_URL}/api/auth/update-recent-files/${userId}`, { fileId });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating recent files:', error);
+    throw error;
+  }
 }; 

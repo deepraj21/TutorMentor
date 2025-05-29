@@ -13,6 +13,7 @@ import SearchBar from '../SearchBar/SearchBar';
 import { Card, CardContent } from '../ui/card';
 import folder_img from "@/assets/all-files.webp"
 import axios from 'axios';
+import { updateRecentFiles } from '@/utils/api';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
@@ -151,81 +152,72 @@ const FileExplorer = () => {
   // Files to display: search results if there are any, otherwise current directory files
   const filesToDisplay = searchResults.length > 0 ? searchResults : files;
 
-  const handleFileClick = (file: DriveFile) => {
+  const handleFileClick = async (file: DriveFile) => {
+    // Update recent files
+    const studentId = localStorage.getItem("studentId");
+    if (studentId) {
+      try {
+        await updateRecentFiles(studentId, file._id);
+      } catch (error) {
+        console.error('Error updating recent files:', error);
+      }
+    }
+
     setPreviewFile(file);
     setIsPreviewOpen(true);
   };
 
-  // const getPreviewUrl = (file: DriveFile) => {
-  //   if (file.mimeType === 'application/pdf') {
-  //     return file.url.replace(/\/(?:image|video|auto)?\/upload\//, '/raw/upload/');
-  //   }
-  //   return file.url;
-  // };
-
   const renderFilePreview = () => {
     if (!previewFile) return null;
 
-    const mimeType = previewFile.mimeType;
-    // const url = getPreviewUrl(previewFile);
+    // Handle PDF files
+    if (previewFile.mimeType === 'application/pdf') {
+      return (
+        <iframe
+          src={previewFile.url}
+          className="w-full h-[70vh]"
+          title={previewFile.name}
+        />
+      );
+    }
 
-    // For images
-    // if (mimeType.startsWith('image/')) {
+    // Handle images
+    if (previewFile.mimeType.startsWith('image/')) {
+      return (
+        <img
+          src={previewFile.url}
+          alt={previewFile.name}
+          className="max-w-full max-h-[70vh] object-contain"
+        />
+      );
+    }
+
+    // For other file types, show a download link
     return (
-      <img
-        src={previewFile.url}
-        alt={previewFile.name}
-        className="max-w-full max-h-[70vh] object-contain"
-      />
+      <div className="flex flex-col items-center justify-center h-[70vh]">
+        <p className="text-lg mb-4">This file type cannot be previewed</p>
+        <Button
+          onClick={() => window.open(previewFile.url, '_blank')}
+          className="bg-tutor-primary hover:bg-tutor-primary/90"
+        >
+          Download File
+        </Button>
+      </div>
     );
-    // }
+  };
 
-    // For PDFs
-    // if (mimeType === 'application/pdf') {
-    //   return (
-    //     <iframe
-    //       src={url}
-    //       className="w-full h-[70vh]"
-    //       title={previewFile.name}
-    //     />
-    //   );
-    // }
-
-    // For videos
-    // if (mimeType.startsWith('video/')) {
-    //   return (
-    //     <video controls className="w-full max-h-[70vh]">
-    //       <source src={url} type={mimeType} />
-    //       Your browser does not support the video tag.
-    //     </video>
-    //   );
-    // }
-
-    // For audio
-    // if (mimeType.startsWith('audio/')) {
-    //   return (
-    //     <audio controls className="w-full">
-    //       <source src={url} type={mimeType} />
-    //       Your browser does not support the audio tag.
-    //     </audio>
-    //   );
-    // }
-
-    // For other file types, offer download option
-    // return (
-    //   <div className="flex flex-col items-center justify-center p-8">
-    //     <div className="text-center">
-    //       <p className="text-lg mb-4">This file type cannot be previewed</p>
-    //       <Button
-    //         onClick={() => {
-    //           window.open(url, '_blank');
-    //         }}
-    //       >
-    //         Download
-    //       </Button>
-    //     </div>
-    //   </div>
-    // );
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType === 'application/pdf') {
+      return pdf_icon;
+    }
+    if (mimeType.startsWith('image/')) {
+      return doc_img; // You might want to add a specific image icon
+    }
+    if (mimeType.includes('word') || mimeType.includes('document')) {
+      return doc_img;
+    }
+    // Add more mime type conditions as needed
+    return pdf_icon; // Default icon
   };
 
   return (
@@ -270,7 +262,7 @@ const FileExplorer = () => {
         </div>
       </div>
 
-      <section className="mb-8 pt-32 container">
+      <section className="mb-8 pt-32">
         <div className="space-y-2">
           {/* Folders */}
           {folders.map((folder) => (
@@ -308,11 +300,10 @@ const FileExplorer = () => {
               <CardContent className="flex items-center justify-between p-0">
                 <div className="flex items-center flex-row gap-2 w-[70%]">
                   <div className='p-2 border-r border-gray-200 dark:border-gray-700'>
-                    <img src={pdf_icon} alt="file_icon" className='h-12 w-12' />
+                    <img src={getFileIcon(file.mimeType)} alt="file_icon" className='h-12 w-12' />
                   </div>
                   <div className="w-[65%]">
                     <h3 className="font-medium text-sm dark:text-white truncate">{file.name}</h3>
-                    {/* <p className="text-xs text-gray-500 dark:text-gray-400">Uploaded by {file.uploadedBy.name}</p> */}
                     <p className="text-xs text-gray-500 dark:text-gray-400">File Size : {formatFileSize(file.size)}</p>
                   </div>
                 </div>

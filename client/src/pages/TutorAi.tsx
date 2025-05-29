@@ -64,7 +64,7 @@ const translations = {
 };
 
 export function TutorAi() {
-    const { user } = useAuth()
+    const { user, isLoggedIn } = useAuth()
     const { language } = useTheme()
     const t = translations[language]
     const studentId = localStorage.getItem("studentId")
@@ -475,7 +475,7 @@ export function TutorAi() {
                 {chatHistory.length == 0 && (
                     <div className="flex items-start justify-end h-full flex-col gap-2 py-4">
                         <img src={tutormentor} alt="tutor-mentor-logo" className="h-20 w-20 dark:invert" />
-                        <span className="text-2xl">{t.hiThere}, {user.displayName}</span>
+                        <span className="text-2xl">{t.hiThere}, {user?.displayName}</span>
                         <span className="text-3xl">{t.welcome}</span>
                         <span className="text-sm">{t.whatToKnow}</span>
                     </div>
@@ -779,10 +779,10 @@ export function TutorAi() {
             <div className="container relative px-4">
                 <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700">
                     <Textarea
-                        placeholder={t.typeMessage}
+                        placeholder={isLoggedIn ? t.typeMessage : "Sign in with Google to chat with Tutor AI"}
                         onChange={(e) => setUserMessage(e.target.value)}
                         value={userMessage}
-                        disabled={isWaiting}
+                        disabled={isWaiting || !isLoggedIn}
                         className="resize-none dark:bg-gray-800/50 border-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
                         onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey && userMessage.trim()) {

@@ -81,6 +81,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setIsLoggedIn(false);
       localStorage.removeItem("authUser");
+      localStorage.removeItem("batchId");
+      localStorage.removeItem("chatHistory");
+      localStorage.removeItem("studentId");
       localStorage.setItem("isLoggedIn", "false");
     } catch (error) {
       console.error("Error signing out:", error);

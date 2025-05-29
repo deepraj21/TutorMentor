@@ -14,7 +14,6 @@ import google_img from "@/assets/google.png"
 import AllFilesImg from "@/assets/all-files.webp"
 import TestFilesImg from "@/assets/test-files.webp"
 import TutorAiImg from "@/assets/tutor-ai.webp"
-import pdf_icon from "@/assets/pdf_icon.webp"
 import axios from "axios";
 import joingBatchImg from "@/assets/join-batch.webp"
 import pendingImg from "@/assets/pending.webp"
@@ -46,6 +45,7 @@ const HomePage = () => {
   const { user, isLoggedIn, signIn } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [tests, setTests] = useState<Test[]>([]);
+  const [recentFiles, setRecentFiles] = useState<FileItemType[]>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -54,6 +54,30 @@ const HomePage = () => {
         if (isLoggedIn && user && (user.email || studentId)) {
           const userDataResponse = await axios.get(`${BACKEND_URL}/api/auth/get-data/${studentId}`);
           setUserData(userDataResponse.data.user);
+          
+          // Fetch details for recent files
+          if (userDataResponse.data.user.recent_files?.length > 0) {
+            const filePromises = userDataResponse.data.user.recent_files.map(async (fileId: string) => {
+              try {
+                const response = await axios.get(`${BACKEND_URL}/api/file/${fileId}`);
+                return {
+                  id: response.data._id,
+                  name: response.data.name,
+                  type: 'file',
+                  url: response.data.url,
+                  size: response.data.size,
+                  mimeType: response.data.mimeType,
+                  lastModified: new Date(response.data.createdAt)
+                };
+              } catch (error) {
+                console.error(`Error fetching file ${fileId}:`, error);
+                return null;
+              }
+            });
+            
+            const files = await Promise.all(filePromises);
+            setRecentFiles(files.filter((file): file is FileItemType => file !== null));
+          }
         }
       } catch (error) {
         setUserData(null);
@@ -122,6 +146,18 @@ const HomePage = () => {
     if (file.type === 'folder') {
       return <Folder className="h-5 w-5 text-tutor-primary dark:text-tutor-accent" />;
     }
+    
+    // Handle different file types
+    // if (file.mimeType === 'application/pdf') {
+    //   return <img src={pdf_icon} alt="PDF" className="h-5 w-5" />;
+    // }
+    // if (file.mimeType.startsWith('image/')) {
+    //   return <img src={doc_img} alt="Image" className="h-5 w-5" />;
+    // }
+    // if (file.mimeType.includes('word') || file.mimeType.includes('document')) {
+    //   return <img src={doc_img} alt="Document" className="h-5 w-5" />;
+    // }
+    
     return <File className="h-5 w-5 text-tutor-secondary dark:text-tutor-secondary" />;
   };
 
@@ -262,13 +298,33 @@ const HomePage = () => {
                       </Link>
                     </div>
 
-
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                      <CardContent className="p-6 text-center">
-                        <p className="text-gray-500 dark:text-gray-400">{t.noRecentFiles}</p>
-                      </CardContent>
-                    </Card>
-
+                    {recentFiles.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {recentFiles.map((file) => (
+                          <Link to={`/drive?file=${file.id}`} key={file.id}>
+                            <Card className="hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700">
+                              <CardContent className="p-4">
+                                <div className="flex items-center space-x-4">
+                                  {renderFileIcon(file)}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate dark:text-white">{file.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                      {getFormattedDate(file.lastModified)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <CardContent className="p-6 text-center">
+                          <p className="text-gray-500 dark:text-gray-400">{t.noRecentFiles}</p>
+                        </CardContent>
+                      </Card>
+                    )}
                   </section>
 
                   {/* Test papers preview */}

@@ -98,7 +98,7 @@ const MainLayoutContent = ({ children }: MainLayoutProps) => {
 const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <ThemeProvider>
-        <MainLayoutContent>{children}</MainLayoutContent>
+      <MainLayoutContent>{children}</MainLayoutContent>
     </ThemeProvider>
   );
 };

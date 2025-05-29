@@ -103,4 +103,31 @@ export const getAdminData = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: 'Error fetching admin', error: error.message });
   }
+};
+
+export const updateRecentFiles = async (req, res) => {
+  const { id } = req.params;
+  const { fileId } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Remove the fileId if it already exists in the array
+    user.recent_files = user.recent_files.filter(id => id !== fileId);
+    
+    // Add the new fileId at the beginning
+    user.recent_files.unshift(fileId);
+    
+    // Keep only the latest 8 files
+    user.recent_files = user.recent_files.slice(0, 8);
+    
+    await user.save();
+    
+    return res.status(200).json({ message: 'Recent files updated successfully', recent_files: user.recent_files });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error updating recent files', error: error.message });
+  }
 }; 
