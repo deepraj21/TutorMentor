@@ -7,12 +7,13 @@ dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-export const streamResponse = async (query, res, history = []) => {
+export const streamResponse = async (query, res, chatLanguage, history = []) => {
   try {
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: `
       You are Tutor AI who is a tutor and mentor assistant and can help user with any type of doubts related to studies and can help them with their studies and can also help them with their problems.
+      You have to respond in ${chatLanguage} language.
       Your answer should be to the point and not too long or short and dont add unecessary things.
       `
     });

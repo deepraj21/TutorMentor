@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useFileSystem } from '@/contexts/FileSystemContext';
 import { FileItem as FileItemType } from '@/types';
 import pdf_icon from "@/assets/pdf_icon.webp"
 import doc_img from "@/assets/doc_img.webp"
@@ -36,15 +35,7 @@ interface Folder {
 }
 
 const FileExplorer = () => {
-  const {
-    currentPath,
-    navigateUp,
-    navigateTo,
-    currentViewFiles,
-    createFolder,
-    uploadFile,
-    searchFiles
-  } = useFileSystem();
+
 
   const { language } = useTheme();
   const [selectedBatch, setSelectedBatch] = useState<string>('');
@@ -67,9 +58,9 @@ const FileExplorer = () => {
 
   const fetchContents = async (folderId?: string) => {
     if (!selectedBatch) return;
-    
+
     try {
-      const url = folderId 
+      const url = folderId
         ? `${BACKEND_URL}/api/folder/${selectedBatch}/folder/${folderId}`
         : `${BACKEND_URL}/api/folder/${selectedBatch}`;
       const response = await axios.get(url);
@@ -110,7 +101,7 @@ const FileExplorer = () => {
 
     // UI-based search
     const searchTerm = searchQuery.toLowerCase();
-    const results = files.filter(file => 
+    const results = files.filter(file =>
       file.name.toLowerCase().includes(searchTerm)
     );
     setSearchResults(results);
@@ -180,13 +171,13 @@ const FileExplorer = () => {
 
     // For images
     // if (mimeType.startsWith('image/')) {
-      return (
-        <img 
-          src={previewFile.url} 
-          alt={previewFile.name} 
-          className="max-w-full max-h-[70vh] object-contain"
-        />
-      );
+    return (
+      <img
+        src={previewFile.url}
+        alt={previewFile.name}
+        className="max-w-full max-h-[70vh] object-contain"
+      />
+    );
     // }
 
     // For PDFs
@@ -283,8 +274,8 @@ const FileExplorer = () => {
         <div className="space-y-2">
           {/* Folders */}
           {folders.map((folder) => (
-            <Card 
-              key={folder._id} 
+            <Card
+              key={folder._id}
               className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700 cursor-pointer"
               onClick={() => handleFolderClick(folder)}
             >
@@ -309,8 +300,8 @@ const FileExplorer = () => {
 
           {/* Files */}
           {filesToDisplay.map((file) => (
-            <Card 
-              key={file._id} 
+            <Card
+              key={file._id}
               className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700 cursor-pointer"
               onClick={() => handleFileClick(file)}
             >

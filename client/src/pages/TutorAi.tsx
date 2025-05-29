@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext"
 import tutormentor from "@/assets/tutor-mentor.png"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 interface ChatMessage {
     role: "user" | "model"
@@ -32,6 +34,7 @@ export function TutorAi() {
         const savedChats = localStorage.getItem("chatHistory")
         return savedChats ? JSON.parse(savedChats) : []
     })
+    const [chatLanguage, setChatLanguage] = useState("English")
     const [chats, setChats] = useState<ChatPreview[]>([])
     const [error, setError] = useState<string>("")
     const [title, setTitle] = useState("New Chat")
@@ -231,8 +234,8 @@ export function TutorAi() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    email: user.email,
                     query: userMessage,
+                    chatLanguage,
                     history: chatHistory,
                 }),
             })
@@ -430,9 +433,10 @@ export function TutorAi() {
                     </Popover>
                 </div>
             </div>
-            <div className="chatarea md:h-[calc(100vh-15rem)] h-[calc(100vh-19rem)] mb-2 container mx-auto px-4 overflow-hidden relative">
+            <div className="chatarea md:h-[calc(100vh-17rem)] h-[calc(100vh-21rem)] mb-2 container mx-auto px-4 overflow-hidden relative">
                 {chatHistory.length == 0 && (
                     <div className="flex items-start justify-end h-full flex-col gap-2 py-4">
+                        <img src={tutormentor} alt="tutor-mentor-logo" className="h-20 w-20 dark:invert" />
                         <span className="text-2xl">Hi there, {user.displayName}</span>
                         <span className="text-3xl">Welcome to Tutor AI</span>
                         <span className="text-sm">what would you like to know?</span>
@@ -591,7 +595,7 @@ export function TutorAi() {
                                                     />
                                                 </button>
                                             </div>
-                                           
+
                                             <div className="flex flex-row items-center gap-2">
                                                 <button
                                                     className="text-zinc-400 dark:hover:text-white hover:text-black flex items-center"
@@ -619,7 +623,7 @@ export function TutorAi() {
                                                             </>
                                                         )}
                                                     </button>
-                                            </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -734,33 +738,41 @@ export function TutorAi() {
                     </div>
                 )}
             </div>
-            <div className="container mx-auto px-4 relative">
-                <Textarea
-                    placeholder="Type your message..."
-                    onChange={(e) => setUserMessage(e.target.value)}
-                    value={userMessage}
-                    disabled={isWaiting}
-                    className="resize-none bg-muted/30"
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey && userMessage.trim()) {
-                            e.preventDefault(); // Prevents adding a new line
-                            handleSendMessage(userMessage);
-                        }
-                    }}
-                />
+            <div className="container relative px-4">
+                <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                    <Textarea
+                        placeholder="Type your message..."
+                        onChange={(e) => setUserMessage(e.target.value)}
+                        value={userMessage}
+                        disabled={isWaiting}
+                        className="resize-none dark:bg-gray-800/50 border-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey && userMessage.trim()) {
+                                e.preventDefault();
+                                handleSendMessage(userMessage);
+                            }
+                        }}
+                    />
+                    <div className="p-2 flex items-center justify-between">
+                        <Tabs defaultValue="English" onValueChange={(value) => setChatLanguage(value)}>
+                            <TabsList>
+                                <TabsTrigger value="English" className="h-7 w-10 rounded-full">en</TabsTrigger>
+                                <TabsTrigger value="Bengali" className="h-7 w-10 rounded-full">বাং</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                        <Button
+                            className="h-7 w-16"
+                            onClick={() => handleSendMessage(userMessage)}
+                            disabled={isWaiting || !userMessage.trim()}
+                        >
+                            <span className="-mr-2">Send</span>
+                            <CornerRightUp />
+                        </Button>
+
+                    </div>
+                </div>
             </div>
 
-            <div className="absolute md:bottom-10 md:right-[200px] bottom-[100px] right-6">
-                <Button
-                    className="h-6 w-16"
-                    // variant="primary"
-                    onClick={() => handleSendMessage(userMessage)}
-                    disabled={isWaiting || !userMessage.trim()}
-                >
-                    <span className="-mr-2">Send</span>
-                    <CornerRightUp />
-                </Button>
-            </div>
         </>
     )
 }

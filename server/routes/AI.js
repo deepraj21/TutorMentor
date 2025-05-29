@@ -12,13 +12,13 @@ const router = express.Router();
 
 router.post('/stream', async (req, res) => {
   try {
-    const { query, history } = req.body;
+    const { query, chatLanguage, history } = req.body;
 
     if (!query) {
       return res.status(400).json({ success: false, error: 'Query is required' });
     }
 
-    await streamResponse(query, res, history || []);
+    await streamResponse(query, res, chatLanguage, history || []);
   } catch (error) {
     console.error('Error processing stream:', error);
     res.status(500).json({ success: false, error: error.message });

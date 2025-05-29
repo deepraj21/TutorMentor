@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useFileSystem } from '@/contexts/FileSystemContext';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileItem as FileItemType } from '@/types';
-import { File, Folder, Clock, ArrowRight, FileText, Search, LayoutGrid, Lock, CheckCircle2 } from 'lucide-react';
+import { File, Folder, Clock, ArrowRight, FileText, LayoutGrid, Lock, CheckCircle2 } from 'lucide-react';
 import { getFormattedDate } from '@/utils/fileUtils';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -15,11 +14,11 @@ import google_img from "@/assets/google.png"
 import AllFilesImg from "@/assets/all-files.webp"
 import TestFilesImg from "@/assets/test-files.webp"
 import TutorAiImg from "@/assets/tutor-ai.webp"
-import ChatHistoryImg from "@/assets/chat-history.webp"
 import pdf_icon from "@/assets/pdf_icon.webp"
 import axios from "axios";
 import joingBatchImg from "@/assets/join-batch.webp"
 import pendingImg from "@/assets/pending.webp"
+import aboutimg from "@/assets/tutor-mentor.png"
 import { Test } from '@/types/test';
 import { getBatchTests } from '@/utils/api';
 import { toast } from 'sonner';
@@ -42,7 +41,6 @@ interface UserData {
 }
 
 const HomePage = () => {
-  const { files } = useFileSystem();
   const [searchQuery, setSearchQuery] = useState('');
   const { language } = useTheme();
   const { user, isLoggedIn, signIn } = useAuth();
@@ -97,7 +95,9 @@ const HomePage = () => {
       recentTestPapers: 'Recent Test Papers',
       noTestPapers: 'No test papers available',
       rootFolder: 'Root folder',
-      searchPlaceholder: 'Search files and folders...'
+      searchPlaceholder: 'Search files and folders...',
+      tutorAi: 'Tutor AI',
+      about: 'About'
     },
     bengali: {
       welcome: 'পিজুশ-টিউশনে স্বাগতম',
@@ -110,30 +110,13 @@ const HomePage = () => {
       recentTestPapers: 'পরীক্ষার কাগজপত্র',
       noTestPapers: 'কোন পরীক্ষার কাগজপত্র উপলব্ধ নেই',
       rootFolder: 'মূল ফোল্ডার',
-      searchPlaceholder: 'ফাইল এবং ফোল্ডার খুঁজুন...'
+      searchPlaceholder: 'ফাইল এবং ফোল্ডার খুঁজুন...',
+      tutorAi: 'টিউটর এআই',
+      about: 'সম্পর্কে'
     }
   };
 
   const t = translations[language];
-
-  const recentFiles = [...files]
-    .filter(file => file.type === 'file')
-    .sort((a, b) => {
-      if (!a.lastModified || !b.lastModified) return 0;
-      return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
-    })
-    .slice(0, 5);
-
-  // Get top-level folders
-  const folders = files.filter(file =>
-    file.type === 'folder' &&
-    file.path.length === 0
-  );
-
-  // Filter files based on search
-  const filteredRecentFiles = searchQuery
-    ? recentFiles.filter(file => file.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : recentFiles;
 
   const renderFileIcon = (file: FileItemType) => {
     if (file.type === 'folder') {
@@ -244,20 +227,20 @@ const HomePage = () => {
                         </Card>
                       </Link>
 
-                      <Link to="" className="block">
+                      <Link to="/tutor-ai" className="block">
                         <Card className="hover:shadow-md transition-shadow h-full dark:bg-gray-800 dark:border-gray-700">
                           <CardContent className="flex flex-col items-center justify-center py-6">
                             <img src={TutorAiImg} alt="Tutor Ai" className='h-24 w-24' />
-                            <h3 className="font-medium dark:text-white w-full truncate text-center">Tutor AI</h3>
+                            <h3 className="font-medium dark:text-white w-full truncate text-center">{t.tutorAi}</h3>
                           </CardContent>
                         </Card>
                       </Link>
 
-                      <Link to="" className="block">
+                      <Link to="/about" className="block">
                         <Card className="hover:shadow-md transition-shadow h-full dark:bg-gray-800 dark:border-gray-700">
                           <CardContent className="flex flex-col items-center justify-center py-6">
-                            <img src={ChatHistoryImg} alt="Tutor Ai" className='h-24 w-24' />
-                            <h3 className="font-medium dark:text-white w-full truncate text-center">Chat History</h3>
+                            <img src={aboutimg} alt="Tutor Ai" className='h-24 w-24 dark:invert' />
+                            <h3 className="font-medium dark:text-white w-full truncate text-center">{t.about}</h3>
                           </CardContent>
                         </Card>
                       </Link>
@@ -279,42 +262,13 @@ const HomePage = () => {
                       </Link>
                     </div>
 
-                    {filteredRecentFiles.length > 0 ? (
-                      <div className="space-y-2">
-                        {filteredRecentFiles.map(file => (
-                          <Card key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:border-gray-700">
-                            <CardContent className="flex items-center justify-between p-0">
-                              <div className="flex items-center flex-row gap-2 w-[70%]">
-                                <div className='p-2 border-r dark:border-gray-700 border-gray-200'>
-                                  <img src={pdf_icon} alt="pdf_icon" className='h-12 w-12' />
-                                </div>
 
-                                <div className="w-[65%]">
-                                  <h3 className="font-medium text-sm dark:text-white truncate">{file.name} </h3>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">In :
-                                    {file.path.length > 0 ? file.path.join(' > ') : t.rootFolder}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className='flex flex-col mr-2'>
-                                <span className="text-xs text-gray-500 dark:text-gray-400 flex justify-end">
-                                  10:29 PM
-                                </span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {file.lastModified && getFormattedDate(file.lastModified)}
-                                </span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <CardContent className="p-6 text-center">
-                          <p className="text-gray-500 dark:text-gray-400">{t.noRecentFiles}</p>
-                        </CardContent>
-                      </Card>
-                    )}
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                      <CardContent className="p-6 text-center">
+                        <p className="text-gray-500 dark:text-gray-400">{t.noRecentFiles}</p>
+                      </CardContent>
+                    </Card>
+
                   </section>
 
                   {/* Test papers preview */}

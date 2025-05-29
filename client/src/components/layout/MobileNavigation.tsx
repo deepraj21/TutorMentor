@@ -1,8 +1,26 @@
 import { Home, FolderOpen, FileText, MessageSquareDotIcon } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
+
+const translations = {
+  english: {
+    home: 'Home',
+    drive: 'Drive',
+    tests: 'Tests',
+    tutorAi: 'Tutor AI'
+  },
+  bengali: {
+    home: 'হোম',
+    drive: 'ড্রাইভ',
+    tests: 'পরীক্ষা',
+    tutorAi: 'এআই'
+  }
+};
 
 const MobileNavigation = () => {
   const location = useLocation();
+  const { language } = useTheme();
+  const t = translations[language];
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -23,7 +41,7 @@ const MobileNavigation = () => {
           }`}
         >
           <Home className="h-5 w-5" />
-          <span className="text-xs mt-1">Home</span>
+          <span className="text-xs mt-1">{t.home}</span>
         </Link>
 
         <Link
@@ -33,7 +51,7 @@ const MobileNavigation = () => {
           }`}
         >
           <FolderOpen className="h-5 w-5" />
-          <span className="text-xs mt-1">Drive</span>
+          <span className="text-xs mt-1">{t.drive}</span>
         </Link>
 
         <Link
@@ -43,7 +61,7 @@ const MobileNavigation = () => {
           }`}
         >
           <FileText className="h-5 w-5" />
-          <span className="text-xs mt-1">Tests</span>
+          <span className="text-xs mt-1">{t.tests}</span>
         </Link>
         <Link
           to="/tutor-ai"
@@ -52,7 +70,7 @@ const MobileNavigation = () => {
           }`}
         >
           <MessageSquareDotIcon className="h-5 w-5" />
-          <span className="text-xs mt-1">Tutor AI</span>
+          <span className="text-xs mt-1">{t.tutorAi}</span>
         </Link>
       </div>
     </div>
