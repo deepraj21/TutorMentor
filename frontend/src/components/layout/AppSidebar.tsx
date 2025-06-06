@@ -14,8 +14,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar"
-import { Settings, LogOut, ChevronUp, User2, Home, BookOpen, LibraryBig, Bot, MessageSquareText, BookmarkXIcon } from "lucide-react"
+import { Settings, LogOut, ChevronUp, User2, Home, BookOpen, LibraryBig, Bot, BookmarkXIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -31,20 +32,20 @@ import { Skeleton } from "@/components/ui/skeleton"
 import logoImg from "@/assets/Logo.png"
 
 interface Classroom {
-  _id: string;
-  name: string;
-  section: string;
-  createdBy: string;
-  createdAt: string;
-  classCode: string;
+  _id: string
+  name: string
+  section: string
+  createdBy: string
+  createdAt: string
+  classCode: string
   teacher: {
-    name: string;
-  };
+    name: string
+  }
 }
 
 interface ClassroomResponse {
-  created: Classroom[];
-  enrolled: Classroom[];
+  created: Classroom[]
+  enrolled: Classroom[]
 }
 
 export function AppSidebar() {
@@ -55,32 +56,35 @@ export function AppSidebar() {
   const [classes, setClasses] = useState<Classroom[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // Add useSidebar hook to control mobile sidebar
+  const { isMobile, setOpenMobile } = useSidebar()
+
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        let fetchedClasses: Classroom[] = [];
+        let fetchedClasses: Classroom[] = []
 
         if (user?.role === "teacher") {
-          const response = await classroomApi.getMyClassrooms();
-          const data = response as unknown as ClassroomResponse;
-          fetchedClasses = data.created;
+          const response = await classroomApi.getMyClassrooms()
+          const data = response as unknown as ClassroomResponse
+          fetchedClasses = data.created
         } else {
           // For students, use getEnrolledClassrooms
-          fetchedClasses = await classroomApi.getEnrolledClassrooms();
+          fetchedClasses = await classroomApi.getEnrolledClassrooms()
         }
 
-        setClasses(fetchedClasses);
+        setClasses(fetchedClasses)
       } catch (error) {
-        console.error("Failed to fetch classes:", error);
+        console.error("Failed to fetch classes:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
     if (isLoggedIn) {
-      fetchClasses();
+      fetchClasses()
     }
-  }, [isLoggedIn, user?.role]);
+  }, [isLoggedIn, user?.role])
 
   const handleLogout = () => {
     signOut()
@@ -93,15 +97,22 @@ export function AppSidebar() {
     setTheme(theme === "dark" ? "light" : "dark")
   }
 
+  // Function to close mobile sidebar when navigation link is clicked
+  const handleMobileNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b dark:border-zinc-700/40 py-[10px]">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link to={`/${user?.role}`}>
+              <Link to={`/${user?.role}`} onClick={handleMobileNavClick}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-education-600 text-white">
-                  <img src={logoImg} alt="" />
+                  <img src={logoImg || "/placeholder.svg"} alt="" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">TutorMentor</span>
@@ -120,7 +131,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive(`/${user?.role}`)} tooltip="Dashboard">
-                  <Link to={`/${user?.role}`}>
+                  <Link to={`/${user?.role}`} onClick={handleMobileNavClick}>
                     <Home />
                     <span>Dashboard</span>
                   </Link>
@@ -130,7 +141,7 @@ export function AppSidebar() {
               {isTeacher && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/materials-library")} tooltip="Materials Library">
-                    <Link to="/materials-library">
+                    <Link to="/materials-library" onClick={handleMobileNavClick}>
                       <LibraryBig />
                       <span>Library</span>
                     </Link>
@@ -163,7 +174,7 @@ export function AppSidebar() {
                       isActive={isActive(`/materials/${cls._id}`)}
                       tooltip={`${cls.name} - ${cls.section}`}
                     >
-                      <Link to={`/materials/${cls._id}`}>
+                      <Link to={`/materials/${cls._id}`} onClick={handleMobileNavClick}>
                         <BookOpen className="h-4 w-4" />
                         <span className="truncate">{cls.name}</span>
                       </Link>
@@ -184,28 +195,26 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {
-          isTeacher && (
-            <>
-              <SidebarSeparator />
-              <SidebarGroup>
-                <SidebarGroupLabel>AIs</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={isActive("/tutor-ai")} tooltip="TutorAI Chat">
-                        <Link to="/tutor-ai">
-                          <Bot />
-                          <span>TutorAI</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </>
-          )
-        }
+        {isTeacher && (
+          <>
+            <SidebarSeparator />
+            <SidebarGroup>
+              <SidebarGroupLabel>AIs</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/tutor-ai")} tooltip="TutorAI Chat">
+                      <Link to="/tutor-ai" onClick={handleMobileNavClick}>
+                        <Bot />
+                        <span>TutorAI</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
@@ -252,13 +261,13 @@ export function AppSidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/profile">
+                  <Link to="/profile" onClick={handleMobileNavClick}>
                     <User2 className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/settings">
+                  <Link to="/settings" onClick={handleMobileNavClick}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
