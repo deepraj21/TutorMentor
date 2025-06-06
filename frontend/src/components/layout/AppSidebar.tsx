@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { Settings, LogOut, ChevronUp, User2, Home, BookOpen, LibraryBig } from "lucide-react"
+import { Settings, LogOut, ChevronUp, User2, Home, BookOpen, LibraryBig, Bot, MessageSquareText, BookmarkXIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -28,6 +28,7 @@ import {
 import { useState, useEffect } from "react"
 import { classroomApi } from "@/utils/api"
 import { Skeleton } from "@/components/ui/skeleton"
+import logoImg from "@/assets/Logo.png"
 
 interface Classroom {
   _id: string;
@@ -58,7 +59,7 @@ export function AppSidebar() {
     const fetchClasses = async () => {
       try {
         let fetchedClasses: Classroom[] = [];
-        
+
         if (user?.role === "teacher") {
           const response = await classroomApi.getMyClassrooms();
           const data = response as unknown as ClassroomResponse;
@@ -67,7 +68,7 @@ export function AppSidebar() {
           // For students, use getEnrolledClassrooms
           fetchedClasses = await classroomApi.getEnrolledClassrooms();
         }
-        
+
         setClasses(fetchedClasses);
       } catch (error) {
         console.error("Failed to fetch classes:", error);
@@ -100,10 +101,10 @@ export function AppSidebar() {
             <SidebarMenuButton size="lg" asChild>
               <Link to={`/${user?.role}`}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-education-600 text-white">
-                  <span className="font-semibold">C</span>
+                  <img src={logoImg} alt="" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Classroom</span>
+                  <span className="truncate font-semibold">TutorMentor</span>
                   <span className="truncate text-xs">Learning Platform</span>
                 </div>
               </Link>
@@ -157,8 +158,8 @@ export function AppSidebar() {
               ) : classes.length > 0 ? (
                 classes.map((cls) => (
                   <SidebarMenuItem key={cls._id}>
-                    <SidebarMenuButton 
-                      asChild 
+                    <SidebarMenuButton
+                      asChild
                       isActive={isActive(`/materials/${cls._id}`)}
                       tooltip={`${cls.name} - ${cls.section}`}
                     >
@@ -170,13 +171,41 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 ))
               ) : (
-                <div className="px-4 py-2 text-sm text-muted-foreground">
-                  No classes yet
-                </div>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="No classes yet">
+                    <div>
+                      <BookmarkXIcon />
+                      <span>No classes yet</span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {
+          isTeacher && (
+            <>
+              <SidebarSeparator />
+              <SidebarGroup>
+                <SidebarGroupLabel>AIs</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive("/tutor-ai")} tooltip="TutorAI Chat">
+                        <Link to="/tutor-ai">
+                          <Bot />
+                          <span>TutorAI</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          )
+        }
       </SidebarContent>
 
       <SidebarFooter>

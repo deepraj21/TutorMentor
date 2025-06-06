@@ -6,18 +6,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Moon, SettingsIcon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
-  const { toast } = useToast();
   const [notifications, setNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [fontPreference, setFontPreference] = useState("inter");
   
   const handleSaveSettings = () => {
-    toast({
-      title: "Settings saved",
+    toast.success("Settings saved", {
       description: "Your preferences have been updated successfully.",
     });
   };
@@ -25,8 +22,7 @@ const Settings = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header title="Settings" />
-      
-      <main className="flex-1 container max-w-4xl mx-auto py-8 px-4">
+      <main className="flex-1 container max-w-6xl mx-auto py-8 px-4 bg-background max-h-[calc(100vh-100px)] overflow-y-scroll no-scrollbar">
         <h2 className="text-2xl text-foreground mb-8 flex items-center gap-2"><SettingsIcon /> Settings</h2>
         
         <div className="grid gap-6">
