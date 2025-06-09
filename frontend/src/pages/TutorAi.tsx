@@ -30,7 +30,11 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
 
 const TutorAi = () => {
     const { user, isLoggedIn } = useAuth()
-    const studentId = localStorage.getItem("studentId")
+    const role = user?.role;
+    const userId = role === "teacher"
+        ? localStorage.getItem("teacherId")
+        : localStorage.getItem("studentId");
+    const userModel = role === "teacher" ? "Teacher" : "Student";
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>(() => {
         const savedChats = localStorage.getItem("chatHistory")
         return savedChats ? JSON.parse(savedChats) : []
@@ -65,6 +69,7 @@ const TutorAi = () => {
                     },
                     body: JSON.stringify({
                         email: user.email,
+                        userModel, 
                     }),
                 })
 
@@ -87,7 +92,7 @@ const TutorAi = () => {
         if (user?.email) {
             fetchChats()
         }
-    }, [user?.email])
+    }, [user?.email, userModel])
 
     // Filter chats based on search query
     useEffect(() => {
@@ -111,7 +116,8 @@ const TutorAi = () => {
                     body: JSON.stringify({
                         title,
                         messages: JSON.parse(currentChat),
-                        userId: studentId,
+                        userId,
+                        userModel,
                     }),
                 })
             }
@@ -147,15 +153,12 @@ const TutorAi = () => {
     const handleLoadChat = async (chatId: string) => {
         try {
             setLoading(true)
-            const response = await fetch(`${BACKEND_URL}/api/ai/${chatId}`, {
-                method: "POST",
+            const response = await fetch(`${BACKEND_URL}/api/ai/${chatId}?userId=${userId}&userModel=${userModel}`, {
+                method: "GET",
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    email: user.email,
-                }),
             })
 
             if (!response.ok) {
@@ -185,7 +188,8 @@ const TutorAi = () => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    userId: studentId,
+                    userId,
+                    userModel, // send userModel
                 }),
             });
 
@@ -340,7 +344,7 @@ const TutorAi = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header title="TutorAi Chat" />
       <main className="flex-1 container max-w-6xl mx-auto px-4 bg-background max-h-[calc(100vh-75px)] overflow-y-scroll no-scrollbar">
-              <div className="flex flex-row container mx-auto px-4 py-4 items-center justify-between relative">
+              <div className="flex flex-row py-4 items-center justify-between">
                   <div className="flex flex-row items-center gap-4">
                       <div className="cursor-pointer flex items-center gap-2 text-sm p-1 border bg-secondary rounded-lg hover:bg-transparent" onClick={handleNewChat}>
                           <span className="hidden md:flex">newChat</span>
@@ -435,11 +439,11 @@ const TutorAi = () => {
                       </Popover>
                   </div>
               </div>
-              <div className="chatarea md:h-[calc(100vh-17rem)] h-[calc(100vh-21rem)] mb-2 container mx-auto px-4 overflow-hidden relative">
+              <div className="chatarea md:h-[calc(100vh-18rem)] h-[calc(100vh-18rem)] mb-2 overflow-hidden relative">
                   {chatHistory.length == 0 && (
                       <div className="flex items-start justify-end h-full flex-col gap-2 py-4">
                           <img src={tutormentor} alt="tutor-mentor-logo" className="h-20 w-20 dark:invert" />
-                          <span className="text-2xl">Hi there, {user?.displayName}</span>
+                          <span className="text-2xl">Hi there, {user?.displayName || user?.name}</span>
                           <span className="text-3xl">Welcome to Tutor AI</span>
                           <span className="text-sm">what would you like to know?</span>
                       </div>
@@ -740,7 +744,7 @@ const TutorAi = () => {
                       </div>
                   )}
               </div>
-              <div className="container relative px-4">
+              <div className="relative">
                   <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700 border-gray-300 overflow-hidden">
                       <Textarea
                           placeholder={isLoggedIn ? 'Type your message...' : "Sign in with Google to chat with Tutor AI"}

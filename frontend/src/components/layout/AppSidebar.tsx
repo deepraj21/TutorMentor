@@ -194,27 +194,23 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarSeparator />
+        <SidebarGroup>
+          <SidebarGroupLabel>AIs</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/tutor-ai")} tooltip="TutorAI Chat">
+                  <Link to="/tutor-ai" onClick={handleMobileNavClick}>
+                    <Bot />
+                    <span>TutorAI</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-        {isTeacher && (
-          <>
-            <SidebarSeparator />
-            <SidebarGroup>
-              <SidebarGroupLabel>AIs</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/tutor-ai")} tooltip="TutorAI Chat">
-                      <Link to="/tutor-ai" onClick={handleMobileNavClick}>
-                        <Bot />
-                        <span>TutorAI</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        )}
       </SidebarContent>
 
       <SidebarFooter>

@@ -3,8 +3,13 @@ import mongoose from 'mongoose';
 const chatSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student',
-    required: true
+    required: true,
+    refPath: 'userModel'
+  },
+  userModel: {
+    type: String,
+    required: true,
+    enum: ['Student', 'Teacher']
   },
   messages: [{
     role: {
@@ -29,4 +34,4 @@ const chatSchema = new mongoose.Schema({
   }
 });
 
-export default mongoose.model('Chat', chatSchema); 
+export default mongoose.model('Chat', chatSchema);

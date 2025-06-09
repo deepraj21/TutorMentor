@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import Chat from '../models/Chat.js';
 import Student from '../models/Student.js';
+import Teacher from '../models/Teacher.js'; // Add this if you have a Teacher model
 
 dotenv.config();
 
@@ -46,10 +47,11 @@ router.post('/stream', async (req, res) => {
 
 router.post('/save', async (req, res) => {
   try {
-    const { title, messages, studentId } = req.body;
+    const { title, messages, userId, userModel } = req.body;
 
     const chat = new Chat({
-      studentId,
+      userId,
+      userModel,
       messages,
       title
     });
@@ -62,14 +64,21 @@ router.post('/save', async (req, res) => {
 });
 
 router.post('/chats', async (req, res) => {
-  const { email } = req.body;
-  const student = await Student.findOne({ email });
-  if (!student) {
-    return res.status(404).json({ message: 'student not found' });
+  const { email, userModel } = req.body;
+  let user;
+  if (userModel === 'Student') {
+    user = await Student.findOne({ email });
+  } else if (userModel === 'Teacher') {
+    user = await Teacher.findOne({ email });
+  } else {
+    return res.status(400).json({ message: 'Invalid userModel' });
   }
-  const studentId = student._id
+  if (!user) {
+    return res.status(404).json({ message: `${userModel.toLowerCase()} not found` });
+  }
+  const userId = user._id;
   try {
-    const chats = await Chat.find({ studentId })
+    const chats = await Chat.find({ userId, userModel })
       .select('title createdAt messages')
       .sort({ createdAt: -1 });
     res.json(chats);
@@ -80,15 +89,17 @@ router.post('/chats', async (req, res) => {
 
 router.get('/:chatId', async (req, res) => {
   try {
+    const { userId, userModel } = req.query;
     const chat = await Chat.findOne({
       _id: req.params.chatId,
-      userId: req.user._id
+      userId,
+      userModel
     });
-    
+
     if (!chat) {
       return res.status(404).json({ message: 'Chat not found' });
     }
-    
+
     res.json(chat);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -96,11 +107,12 @@ router.get('/:chatId', async (req, res) => {
 });
 
 router.delete('/:chatId', async (req, res) => {
-  const { studentId } = req.body;
+  const { userId, userModel } = req.body;
   try {
-    const deletedChat = await Chat.findOneAndDelete({ 
-      _id: req.params.chatId, 
-      studentId
+    const deletedChat = await Chat.findOneAndDelete({
+      _id: req.params.chatId,
+      userId,
+      userModel
     });
 
     if (!deletedChat) {

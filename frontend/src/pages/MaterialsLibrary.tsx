@@ -40,7 +40,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Item } from "@radix-ui/react-dropdown-menu";
+import noClass from "@/assets/no-class.png"
 
 interface SharedMaterial {
   _id: string;
@@ -200,9 +200,11 @@ const MaterialsLibrary = () => {
             </div>
 
             {materials.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No materials have been shared to the library yet.</p>
-              </div>
+                <div className="flex flex-col items-center justify-center text-center">
+                  <img src={noClass} alt="" className="h-80 w-80 dark:invert" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No Material yet</h3>
+                  <p className="text-muted-foreground mb-4">Share your Material to Library to make it public</p>
+                </div>
             )}
 
             {totalPages > 1 && (
