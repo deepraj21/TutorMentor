@@ -17,6 +17,14 @@ const teacherSchema = new Schema({
         type: String,
         required: true,
         minlength: 6
+    },
+    resetPasswordCode: {
+        type: String,
+        default: undefined
+    },
+    resetPasswordExpires: {
+        type: Date,
+        default: undefined
     }
 }, {
     timestamps: true

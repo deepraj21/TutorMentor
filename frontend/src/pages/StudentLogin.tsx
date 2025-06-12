@@ -17,15 +17,15 @@ const StudentLogin = () => {
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back to selection
         </Link>
-        
+
         <Card className="shadow-lg border-t-4 border-t-education-600 animate-fade-in dark:bg-[#0f172a] dark:border dark:border-gray-800">
           <CardContent className="p-0">
             <div className="p-6 border-b dark:border-gray-700/60">
-            <h2 className="text-xl font-semibold dark:text-white">Student Login</h2>
+              <h2 className="text-xl font-semibold dark:text-white">Student Login</h2>
             </div>
-            
+
             <div className="p-6">
-              <Button 
+              <Button
                 onClick={async () => {
                   setIsLoading(true);
                   try {
@@ -45,7 +45,17 @@ const StudentLogin = () => {
           </CardContent>
         </Card>
         <div className="text-left mt-8 text-sm">
-          <p className="text-gray-600 dark:text-gray-300">By entering your details, you agree to our <a href="" className="underline">Terms of Service</a> and <a href="" className="underline">Privacy Policy</a>.</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            By entering your details, you agree to our{" "}
+            <Link to="/terms&conditions" className="underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy&policy" className="underline">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </div>

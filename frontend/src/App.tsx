@@ -20,6 +20,9 @@ import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/middleware/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import TutorAi from "./pages/TutorAi";
+import Forgot from "./pages/Forgot";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +38,10 @@ const App = () => (
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<RoleSelection />} />
               <Route path="/login/teacher" element={<TeacherLogin />} />
+              <Route path="/forgot-password" element={<Forgot />} />
               <Route path="/login/student" element={<StudentLogin />} />
+              <Route path="/terms&conditions" element={<TermsAndConditions />} />
+              <Route path="/privacy&policy" element={<PrivacyPolicy />} />
 
               <Route path="/*" element={
                 <SidebarProvider>

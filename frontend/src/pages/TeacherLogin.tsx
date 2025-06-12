@@ -51,7 +51,7 @@ const TeacherLogin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-r flex flex-col items-center md:justify-center justify-end p-4">
+    <div className="min-h-screen flex flex-col items-center md:justify-center justify-end p-4">
       <div className="max-w-md w-full">
         <Link
           to="/login"
@@ -87,11 +87,11 @@ const TeacherLogin = () => {
                   <Label htmlFor="password" className="dark:text-gray-200">
                     Password
                   </Label>
-                  <a href="/forgot" className="underline">
+                  <Link to="/forgot-password" className="underline">
                     <Label htmlFor="forgot" className="dark:text-gray-200 cursor-pointer">
                       forgot password?
                     </Label>
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative">
                   <Input
@@ -138,13 +138,13 @@ const TeacherLogin = () => {
         <div className="text-left mt-8 text-sm">
           <p className="text-gray-600 dark:text-gray-300">
             By entering your details, you agree to our{" "}
-            <a href="" className="underline">
+            <Link to="/terms&conditions" className="underline">
               Terms of Service
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a href="" className="underline">
+            <Link to="/privacy&policy" className="underline">
               Privacy Policy
-            </a>
+            </Link>
             .
           </p>
         </div>

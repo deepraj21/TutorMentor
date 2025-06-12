@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import Chat from '../models/Chat.js';
 import Student from '../models/Student.js';
-import Teacher from '../models/Teacher.js'; // Add this if you have a Teacher model
+import Teacher from '../models/Teacher.js'; 
 
 dotenv.config();
 

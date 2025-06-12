@@ -80,6 +80,12 @@ interface ClassroomDetails {
   }[];
 }
 
+interface PasswordResetRequest {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
 export const teacherApi = {
   login: async (credentials: TeacherLoginCredentials): Promise<TeacherLoginResponse> => {
     try {
@@ -104,6 +110,42 @@ export const teacherApi = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(error.response?.data?.message || 'Signup failed');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  requestPasswordReset: async (email: string): Promise<{ message: string; email: string }> => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/auth/request-password-reset`, { email });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to request password reset');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  verifyResetCode: async (email: string, code: string): Promise<{ message: string }> => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/auth/verify-reset-code`, { email, code });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to verify code');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  verifyAndResetPassword: async (data: { email: string; code: string; newPassword: string }): Promise<{ message: string }> => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/auth/verify-and-reset-password`, data);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to reset password');
       }
       throw new Error('An unexpected error occurred');
     }

@@ -644,7 +644,9 @@ const MaterialsPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Class Code:</p>
-                    <p className="font-medium">{classroomDetails.classCode}</p>
+                    {user?.role === "teacher" ? (
+                      <p className="font-medium">{classroomDetails.classCode}</p>
+                    ) : '•'.repeat(6) }
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Created By:</p>
