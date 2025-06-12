@@ -111,8 +111,8 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to={`/${user?.role}`} onClick={handleMobileNavClick}>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-education-600 text-white">
-                  <img src={logoImg || "/placeholder.svg"} alt="" />
+                <div className="flex aspect-square size-8 items-center justify-center">
+                  <img src={logoImg || "/placeholder.svg"} alt="logo" className="invert dark:invert-0" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">TutorMentor</span>
@@ -223,7 +223,7 @@ export function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={user?.photoURL || "/placeholder.svg"} alt={user?.displayName} />
+                    <AvatarImage src={user?.photoURL || "https://i.ibb.co/Xk4nxc9g/user.jpg"} alt={user?.displayName} />
                     <AvatarFallback className="rounded-lg bg-education-600 text-white">
                       {user?.displayName?.charAt(0) || "U"}
                     </AvatarFallback>

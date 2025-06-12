@@ -115,6 +115,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoggedIn(false);
       localStorage.removeItem("classroomUser");
       localStorage.removeItem("studentId");
+      localStorage.removeItem("teacherId");
+      localStorage.removeItem("chatHistory");
       localStorage.setItem("isLoggedIn", "false");
       navigate("/login");
     } catch (error) {

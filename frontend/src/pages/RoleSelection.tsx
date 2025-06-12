@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "@/assets/Logo.png"
 
 const RoleSelection = () => {
   const { isLoggedIn, user } = useAuth();
@@ -20,14 +21,15 @@ const RoleSelection = () => {
     <div className="min-h-screen flex flex-col items-center md:justify-center justify-end p-4">
       <div className="max-w-md w-full">
         <div className="text-left mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Welcome to Classroom</h1>
+          <img src={logo} alt="logo" className="h-14 w-14 mb-2 invert dark:invert-0" />
+          <h1 className="text-3xl text-gray-800 dark:text-white mb-2">Welcome to TutorMentor</h1>
           <p className="text-gray-600 dark:text-gray-300">Select how you want to login</p>
         </div>
 
         <Card className="shadow-lg border-t-4 border-t-education-600 animate-fade-in dark:bg-[#0f172a] dark:border dark:border-gray-800">
           <CardContent className="pt-6 p-0">
             <div className="p-6 border-b dark:border-gray-700/60">
-              <h2 className="text-xl font-semibold dark:text-white">Classroom Login</h2>
+              <h2 className="text-xl font-semibold dark:text-white">TutorMentor Login</h2>
             </div>
 
             <div className="grid grid-cols-2 gap-4 p-6">
