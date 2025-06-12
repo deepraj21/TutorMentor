@@ -244,7 +244,7 @@ export function AppSidebar() {
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage src={user?.photoURL || "/placeholder.svg"} alt={user?.displayName} />
+                      <AvatarImage src={user?.photoURL || "https://i.ibb.co/Xk4nxc9g/user.jpg"} alt={user?.displayName} />
                       <AvatarFallback className="rounded-lg bg-education-600 text-white">
                         {user?.displayName?.charAt(0) || "U"}
                       </AvatarFallback>
