@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
-import { ArrowRight, Grid2X2Icon, List, Plus, Eye, EyeOff, EllipsisVertical, Copy, Archive, Trash2, Book, RefreshCw, Notebook, Loader2, Share2 } from "lucide-react";
+import { ArrowRight, Grid2X2Icon, List, Plus, Eye, EyeOff, EllipsisVertical, Copy, Archive, Trash2, Book, RefreshCw, Notebook, Loader2, Share2, X } from "lucide-react";
 import { toast } from "sonner"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { classroomApi } from "@/utils/api";
@@ -29,9 +29,15 @@ interface Classroom {
   createdBy: string;
   createdAt: string;
   classCode: string;
-  teacher: {
+  teacher?: {
     name: string;
+    email: string;
   };
+}
+
+interface ClassroomResponse {
+  created: Classroom[];
+  enrolled: Classroom[];
 }
 
 const TeacherDashboard = () => {
@@ -54,19 +60,29 @@ const TeacherDashboard = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [recipientEmails, setRecipientEmails] = useState<string[]>([""]);
+  const [isSending, setIsSending] = useState(false);
+  const [teacherName, setTeacherName] = useState("");
+
+  const user = JSON.parse(localStorage.getItem("classroomUser") || "{}")
 
   useEffect(() => {
     const teacherId = localStorage.getItem('teacherId');
+    const name = user?.name;
     if (!teacherId) {
       toast.error('Please login to access your classrooms');
       return;
+    }
+    if (name) {
+      setTeacherName(name);
     }
     fetchClassrooms();
   }, []);
 
   const fetchClassrooms = async () => {
     try {
-      const data = await classroomApi.getMyClassrooms();
+      const data = await classroomApi.getMyClassrooms() as ClassroomResponse;
       setClasses(data.created);
       setEnrolledClasses(data.enrolled);
     } catch (error) {
@@ -175,6 +191,68 @@ const TeacherDashboard = () => {
     }
   };
 
+  const handleAddEmailField = () => {
+    setRecipientEmails([...recipientEmails, ""]);
+  };
+
+  const handleRemoveEmailField = (index: number) => {
+    setRecipientEmails(recipientEmails.filter((_, i) => i !== index));
+  };
+
+  const handleEmailChange = (index: number, value: string) => {
+    const newEmails = [...recipientEmails];
+    newEmails[index] = value;
+    setRecipientEmails(newEmails);
+  };
+
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleShareClass = async (cls: Classroom) => {
+    // Filter out empty emails and validate email format
+    const validEmails = recipientEmails
+      .filter(email => email.trim() !== "")
+      .filter(email => isValidEmail(email));
+
+    if (validEmails.length === 0) {
+      toast.error("Please enter at least one valid email address");
+      return;
+    }
+
+    // Check for invalid emails
+    const invalidEmails = recipientEmails
+      .filter(email => email.trim() !== "")
+      .filter(email => !isValidEmail(email));
+
+    if (invalidEmails.length > 0) {
+      toast.error("Some email addresses are invalid", {
+        description: "Please check the format of your email addresses"
+      });
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const response = await classroomApi.sendClassInvite({
+        classCode: cls.classCode,
+        className: cls.name,
+        teacherName,
+        recipientEmails: validEmails
+      });
+      toast.success(`Class invites sent successfully to ${response.sentTo} recipient${response.sentTo > 1 ? 's' : ''}!`);
+      setRecipientEmails([""]);
+      setShareDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to send class invites", {
+        description: error instanceof Error ? error.message : 'An error occurred'
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const renderClassCode = (cls: Classroom) => {
     const isVisible = visibleClassCodes.has(cls._id);
     return (
@@ -211,7 +289,14 @@ const TeacherDashboard = () => {
         >
           <RefreshCw className="h-4 w-4" />
         </button>
-        <button>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setSelectedClass(cls);
+            setShareDialogOpen(true);
+          }}
+        >
           <Share2 className="h-4 w-4" />
         </button>
       </div>
@@ -258,30 +343,39 @@ const TeacherDashboard = () => {
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader className="p-6 border-b">
-                  <DialogTitle>Join a Class woth Classcode</DialogTitle>
+                  <DialogTitle>Join a Class with Classcode</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4 p-6">
-                  <div className="grid gap-2">
+                <div className="grid gap-4 py-4 p-6 flex justify-center">
+                  <div className="flex gap-8 md:pb-4">
                     <InputOTP
                       maxLength={6}
                       value={classCode.join("")}
                       onChange={(value) => setClassCode(value.split(""))}
                       containerClassName="flex gap-2 justify-center"
                     >
-                      <InputOTPGroup>
+                      <InputOTPGroup className="w-fit">
                         {Array.from({ length: 6 }).map((_, index) => (
                           <InputOTPSlot key={index} index={index} />
                         ))}
                       </InputOTPGroup>
                     </InputOTP>
+                    <Button onClick={handleJoinClass} disabled={isJoining} className="hidden md:block">
+                    {isJoining ? (
+                      <>
+                        Joining..
+                      </>
+                    ) : (
+                      'Join Class'
+                    )}
+                  </Button>
                   </div>
                 </div>
-                <DialogFooter className="p-6 border-t">
+                <DialogFooter className="p-6 border-t md:hidden">
                   <Button variant="outline" onClick={() => setIsJoinDialogOpen(false)} className="hidden md:block" disabled={isJoining}>Cancel</Button>
                   <Button onClick={handleJoinClass} disabled={isJoining}>
                     {isJoining ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Loader2 className="h-4 mr-2 animate-spin" />
                         Joining...
                       </>
                     ) : (
@@ -328,7 +422,7 @@ const TeacherDashboard = () => {
                   <Button onClick={handleCreateClass} disabled={isCreating}>
                     {isCreating ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 animate-spin" />
                         Creating...
                       </>
                     ) : (
@@ -523,7 +617,7 @@ const TeacherDashboard = () => {
                                   <div className="flex items-center gap-2 mt-1">
                                     <span className="text-sm text-muted-foreground">Section: {cls.section}</span>
                                     <span className="text-sm text-muted-foreground">•</span>
-                                    <span className="text-sm text-muted-foreground">Teacher: {cls.teacher.name}</span>
+                                    <span className="text-sm text-muted-foreground">Teacher: {cls.teacher?.name}</span>
                                   </div>
                                 </div>
                               </div>
@@ -585,7 +679,7 @@ const TeacherDashboard = () => {
                               </div>
                               <div className="flex flex-col gap-1">
                                 <p className="text-sm text-muted-foreground">Section: {cls.section}</p>
-                                <p className="text-sm text-muted-foreground">Teacher: {cls.teacher.name}</p>
+                                <p className="text-sm text-muted-foreground">Teacher: {cls.teacher?.name}</p>
                               </div>
                             </div>
                             <div className="mt-4 flex justify-between items-center">
@@ -651,7 +745,7 @@ const TeacherDashboard = () => {
               >
                 {isDeleting ? (
                   <>
-                   <Loader2 className="h-4 w-4 animate-spin" />
+                   <Loader2 className="h-4 animate-spin" />
                     Deleting...
                   </>
                 ) : (
@@ -679,7 +773,7 @@ const TeacherDashboard = () => {
               >
                 {isResetting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 animate-spin" />
                     Resetting...
                   </>
                 ) : (
@@ -708,11 +802,73 @@ const TeacherDashboard = () => {
               >
                 {isLeaving ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 animate-spin" />
                     Leaving...
                   </>
                 ) : (
                   'Leave Class'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Share Dialog */}
+        <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader className="p-6 border-b">
+              <DialogTitle>Share Class</DialogTitle>
+            </DialogHeader>
+            <div className="py-4 p-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Recipient Emails</Label>
+                  {recipientEmails.map((email, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        type="email"
+                        placeholder="Enter email address"
+                        value={email}
+                        onChange={(e) => handleEmailChange(index, e.target.value)}
+                      />
+                      {recipientEmails.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveEmailField(index)}
+                          className="shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    onClick={handleAddEmailField}
+                    className="w-full mt-2"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Another Email
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="p-6 border-t">
+              <Button variant="outline" onClick={() => setShareDialogOpen(false)} className="hidden md:block" disabled={isSending}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => selectedClass && handleShareClass(selectedClass)}
+                disabled={isSending}
+              >
+                {isSending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send Invites'
                 )}
               </Button>
             </DialogFooter>

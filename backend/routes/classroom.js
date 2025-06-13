@@ -2,6 +2,7 @@ import express from 'express';
 import Classroom from '../models/Classroom.js';
 import Teacher from '../models/Teacher.js';
 import Student from '../models/Student.js';
+import { sendClassInvite } from '../utils/emailService.js';
 
 const router = express.Router();
 
@@ -371,6 +372,50 @@ router.get('/:id/details', async (req, res) => {
     } catch (error) {
         console.error('Error fetching classroom details:', error);
         res.status(500).json({ message: 'Error fetching classroom details', error: error.message });
+    }
+});
+
+// Email validation regex
+const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+};
+
+// Send class invite via email
+router.post('/send-invite', async (req, res) => {
+    try {
+        const { classCode, className, teacherName, recipientEmails } = req.body;
+
+        // Validate required fields
+        if (!classCode || !className || !teacherName) {
+            return res.status(400).json({ message: 'Class code, class name, and teacher name are required' });
+        }
+
+        if (!recipientEmails || !Array.isArray(recipientEmails)) {
+            return res.status(400).json({ message: 'Recipient emails must be an array' });
+        }
+
+        // Filter out empty emails and validate email format
+        const validEmails = recipientEmails
+            .filter(email => email.trim() !== "")
+            .filter(email => isValidEmail(email));
+
+        if (validEmails.length === 0) {
+            return res.status(400).json({ message: 'At least one valid email address is required' });
+        }
+
+        // Send emails in parallel
+        await Promise.all(
+            validEmails.map(email => sendClassInvite(email, className, classCode, teacherName))
+        );
+
+        res.json({ 
+            message: 'Class invites sent successfully',
+            sentTo: validEmails.length
+        });
+    } catch (error) {
+        console.error('Error sending class invites:', error);
+        res.status(500).json({ message: 'Error sending class invites', error: error.message });
     }
 });
 

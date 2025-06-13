@@ -86,6 +86,16 @@ interface PasswordResetRequest {
   newPassword: string;
 }
 
+interface ClassroomResponse {
+  created: Classroom[];
+  enrolled: Classroom[];
+}
+
+interface SendClassInviteResponse {
+  message: string;
+  sentTo: number;
+}
+
 export const teacherApi = {
   login: async (credentials: TeacherLoginCredentials): Promise<TeacherLoginResponse> => {
     try {
@@ -166,7 +176,7 @@ export const classroomApi = {
     }
   },
 
-  getMyClassrooms: async (): Promise<Classroom[]> => {
+  getMyClassrooms: async (): Promise<ClassroomResponse> => {
     try {
       const teacherId = localStorage.getItem('teacherId');
       if (!teacherId) {
@@ -372,5 +382,22 @@ export const classroomApi = {
       params: { page, limit, sortBy, sortOrder }
     });
     return response.data;
+  },
+
+  sendClassInvite: async (data: { 
+    classCode: string; 
+    className: string; 
+    teacherName: string; 
+    recipientEmails: string[] 
+  }): Promise<SendClassInviteResponse> => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/classroom/send-invite`, data);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to send class invites');
+      }
+      throw new Error('An unexpected error occurred');
+    }
   }
 };

@@ -133,27 +133,35 @@ const StudentDashboard = () => {
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader className="p-6 border-b">
-                  <DialogTitle>Join a Class</DialogTitle>
+                  <DialogTitle>Join a Class with Classcode</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4 p-6">
-                  <div className="grid gap-2">
-                    <label htmlFor="classCode" className="text-foreground">Class Code</label>
+                <div className="grid gap-4 py-4 p-6 flex justify-center">
+                  <div className="flex gap-8 md:pb-4">
                     <InputOTP
                       maxLength={6}
                       value={classCode.join("")}
                       onChange={(value) => setClassCode(value.split(""))}
                       containerClassName="flex gap-2 justify-center"
                     >
-                      <InputOTPGroup>
+                      <InputOTPGroup className="w-fit">
                         {Array.from({ length: 6 }).map((_, index) => (
                           <InputOTPSlot key={index} index={index} />
                         ))}
                       </InputOTPGroup>
                     </InputOTP>
+                    <Button onClick={handleJoinClass} disabled={isJoining} className="hidden md:block">
+                    {isJoining ? (
+                      <>
+                        Joining..
+                      </>
+                    ) : (
+                      'Join Class'
+                    )}
+                  </Button>
                   </div>
                 </div>
-                <DialogFooter className="p-6 border-t">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="hidden md:block" disabled={isJoining}>Cancel</Button>
+                <DialogFooter className="p-6 border-t md:hidden">
+                  <Button variant="outline" className="hidden md:block" disabled={isJoining}>Cancel</Button>
                   <Button onClick={handleJoinClass} disabled={isJoining}>
                     {isJoining ? (
                       <>
@@ -161,7 +169,7 @@ const StudentDashboard = () => {
                         Joining...
                       </>
                     ) : (
-                      'Join Classroom'
+                      'Join Class'
                     )}
                   </Button>
                 </DialogFooter>
