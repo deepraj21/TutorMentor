@@ -23,6 +23,7 @@ import TutorAi from "./pages/TutorAi";
 import Forgot from "./pages/Forgot";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import MathEditor from "./pages/MathEditor";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,12 @@ const App = () => (
                         <Route path="profile" element={
                           <ProtectedRoute>
                             <Profile />
+                          </ProtectedRoute>
+                        } />
+
+                         <Route path="math-editor" element={
+                          <ProtectedRoute>
+                            <MathEditor />
                           </ProtectedRoute>
                         } />
 

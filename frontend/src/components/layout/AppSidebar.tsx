@@ -16,7 +16,7 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Settings, LogOut, ChevronUp, User2, Home, BookOpen, LibraryBig, Bot, BookmarkXIcon } from "lucide-react"
+import { Settings, LogOut, ChevronUp, User2, Home, BookOpen, LibraryBig, Bot, BookmarkXIcon, Pi } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -196,7 +196,7 @@ export function AppSidebar() {
         </SidebarGroup>
         <SidebarSeparator />
         <SidebarGroup>
-          <SidebarGroupLabel>AIs</SidebarGroupLabel>
+          <SidebarGroupLabel>Tools</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -207,6 +207,16 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {isTeacher && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/math-editor")} tooltip="TutorAI Chat">
+                  <Link to="/math-editor" onClick={handleMobileNavClick}>
+                    <Pi />
+                    <span>Math Editor</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

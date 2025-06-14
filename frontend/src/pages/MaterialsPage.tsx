@@ -327,7 +327,7 @@ const MaterialsPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header title="Class Materials" />
-      <main className="flex-1 container max-w-6xl mx-auto py-8 px-4 bg-background max-h-[calc(100vh-100px)] overflow-y-scroll no-scrollbar">
+      <main className="flex-1 container max-w-6xl mx-auto py-8 px-4 bg-background max-h-[calc(100vh-75px)] overflow-y-scroll no-scrollbar">
         <div>
           <Link to={user?.role === "teacher" ? "/teacher" : "/student"} className="inline-flex items-center text-sm text-education-600 mb-4 hover:text-education-800 transition-colors">
             <ArrowLeft className="mr-1 h-4 w-4" />
