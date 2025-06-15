@@ -360,13 +360,13 @@ const TutorAi = () => {
                                         className="bg-transparent outline-none"
                                         autoFocus
                                     />
-                                    <Check className="h-4 w-4 opacity-70 hover:opacity-100 cursor-pointer" onClick={handleTitleSave} />
-                                    <X className="h-4 w-4 opacity-70 hover:opacity-100 cursor-pointer" onClick={handleTitleCancel} />
+                                    <Check className="h-4 w-4 cursor-pointer" onClick={handleTitleSave} />
+                                    <X className="h-4 w-4 cursor-pointer" onClick={handleTitleCancel} />
                                 </div>
                             ) : (
                                 <>
                                     <span>{title}</span>
-                                    <Pencil className="h-4 w-4 opacity-70 hover:opacity-100 cursor-pointer" onClick={handleTitleEdit} />
+                                    <Pencil className="h-4 w-4 cursor-pointer" onClick={handleTitleEdit} />
                                 </>
                             )}
                         </div>
@@ -377,7 +377,7 @@ const TutorAi = () => {
                             <PopoverTrigger asChild>
                                 <Button className="bg-education-600 hover:bg-education-700" size={"sm"}>
                                     <span className="hidden md:flex">history</span>
-                                    <History className="h-4 w-4 opacity-70 hover:opacity-100" />
+                                    <History className="h-4 w-4" />
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[250px] mt-2 p-0" align="end">

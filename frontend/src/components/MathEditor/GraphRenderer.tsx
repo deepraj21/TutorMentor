@@ -7,7 +7,7 @@ interface GraphRendererProps {
   height?: number;
 }
 
-export function GraphRenderer({ expression, width = 400, height = 300 }: GraphRendererProps) {
+export function GraphRenderer({ expression, width = 300, height = 300 }: GraphRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -16,7 +16,8 @@ export function GraphRenderer({ expression, width = 400, height = 300 }: GraphRe
     try {
       // Clear previous graph
       containerRef.current.innerHTML = '';
-      
+
+      // Add a transparent background to make grid lines visible
       functionPlot({
         target: containerRef.current,
         width,
@@ -43,7 +44,7 @@ export function GraphRenderer({ expression, width = 400, height = 300 }: GraphRe
           <div style="
             width: ${width}px; 
             height: ${height}px; 
-            background: #fef2f2; 
+            background: transparent; 
             border: 1px solid #fecaca; 
             border-radius: 8px; 
             display: flex; 
@@ -62,5 +63,11 @@ export function GraphRenderer({ expression, width = 400, height = 300 }: GraphRe
     }
   }, [expression, width, height]);
 
-  return <div ref={containerRef} className="flex justify-center" />;
+  return (
+    <div
+      ref={containerRef}
+      className="flex justify-center"
+      style={{ background: 'transparent' }}
+    />
+  );
 }

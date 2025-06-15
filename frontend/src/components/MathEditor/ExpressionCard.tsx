@@ -83,7 +83,7 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
                 className="h-8 text-sm font-medium"
               />
             ) : (
-              <h3 className="font-medium text-gray-900">
+              <h3 className="font-medium">
                 {expression.title || `${expression.type === 'math' ? 'Math' : 'Graph'} Expression`}
               </h3>
             )}
@@ -94,7 +94,7 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
               variant="ghost"
               size="sm"
               onClick={exportExpression}
-              className="h-8 w-8 p-0 hover:bg-blue-100"
+              className="h-8 w-8 p-0"
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -102,7 +102,7 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
               variant="ghost"
               size="sm"
               onClick={() => setIsEditing(!isEditing)}
-              className="h-8 w-8 p-0 hover:bg-blue-100"
+              className="h-8 w-8 p-0"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -110,7 +110,7 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
               variant="ghost"
               size="sm"
               onClick={onDelete}
-              className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
+              className="h-8 w-8 p-0 text-red-600"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -133,7 +133,7 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
               />
             </div>
             <div className="flex gap-2">
-              <Button onClick={saveEdit} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={saveEdit} size="sm" className="bg-education-600 hover:bg-education-700">
                 Save
               </Button>
               <Button onClick={cancelEdit} variant="outline" size="sm">
@@ -142,7 +142,7 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
             </div>
           </div>
         ) : (
-          <div>
+          <div className="w-full">
             {expression.type === 'math' ? (
               <MathRenderer content={expression.content} />
             ) : (

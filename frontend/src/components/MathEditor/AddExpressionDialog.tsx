@@ -144,13 +144,13 @@ export function AddExpressionDialog({ open, onOpenChange, onAdd }: AddExpression
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="p-6 border-b">
           <DialogTitle>Add New Expression</DialogTitle>
         </DialogHeader>
-        <div className="py-4 p-6">
+        <div className="py-4 p-6 max-h-[18rem] overflow-y-auto">
           <Tabs value={type} onValueChange={(value) => setType(value as 'math' | 'graph')}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 p-1">
               <TabsTrigger value="math" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Math Expression
@@ -203,7 +203,7 @@ export function AddExpressionDialog({ open, onOpenChange, onAdd }: AddExpression
               {content && (
                 <div>
                   <Label>Preview</Label>
-                  <div className="border rounded-lg p-4 bg-gray-50">
+                  <div className="border rounded-lg p-4">
                     <MathRenderer content={content} />
                   </div>
                 </div>
@@ -252,16 +252,16 @@ export function AddExpressionDialog({ open, onOpenChange, onAdd }: AddExpression
               {content && (
                 <div>
                   <Label>Preview</Label>
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <GraphRenderer expression={content} width={350} height={250} />
-                  </div>
+                    <div className="border rounded-lg p-4 bg-gray-50 w-full">
+                    <GraphRenderer expression={content} width={400} height={200} />
+                    </div>
                 </div>
               )}
             </TabsContent>
           </Tabs>
         </div>
           <DialogFooter className="p-6 border-t">
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" onClick={handleCancel} className="hidden md:block">
             Cancel
           </Button>
           <Button 

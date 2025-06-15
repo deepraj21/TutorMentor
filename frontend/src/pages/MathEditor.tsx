@@ -2,7 +2,7 @@ import Header from "@/components/layout/Header"
 import { AddExpressionDialog } from "@/components/MathEditor/AddExpressionDialog";
 import { ExpressionCard } from "@/components/MathEditor/ExpressionCard";
 import { Button } from "@/components/ui/button";
-import { Check, Pencil, Plus, X } from "lucide-react";
+import { BookOpen, Check, Download, Pencil, Plus, Share, X } from "lucide-react";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -148,31 +148,35 @@ const MathEditor = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <span>new</span>
-                                    <Pencil className="h-4 w-4 opacity-70 hover:opacity-100 cursor-pointer" />
+                                    <span>page 1</span>
+                                    <Pencil className="h-4 w-4 cursor-pointer" />
                                 </>
                             )}
                         </div>
                     </div>
 
-                    <div className="top-5 right-10 cursor-pointer">
+                    <div className="top-5 right-10 cursor-pointer flex items-center gap-4">
+                        <Button onClick={addPage} className="bg-education-600 hover:bg-education-700" size={"sm"}>
+                            <span className="hidden md:flex">Export</span>
+                            <Download className="h-4 w-4" />
+                        </Button>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button className="bg-education-600 hover:bg-education-700" size={"sm"}>
                                     <span className="hidden md:flex">Pages</span>
-                                    {/* <History className="h-4 w-4 opacity-70 hover:opacity-100" /> */}
+                                    <BookOpen className="h-4 w-4" />
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[250px] mt-2 p-0" align="end">
                                 <Command className="shadow-md">
                                     <CommandInput
-                                        placeholder="searchChats"
+                                        placeholder="Search pages..."
                                         // value={searchQuery}
                                         // onValueChange={setSearchQuery}
                                         className="h-9"
                                     />
                                     <CommandList>
-                                        <CommandEmpty>noChatsFound</CommandEmpty>
+                                        <CommandEmpty>No Pages found</CommandEmpty>
                                         <CommandGroup>
                                             {/* {loading ? (
                                                             <div className="py-6 text-center text-sm text-muted-foreground">loadingChats...</div>
@@ -247,35 +251,29 @@ const MathEditor = () => {
                         ))}
 
                         {currentPage && currentPage.expressions.length === 0 && (
-                            <div className="text-center py-12 bg-white/60 rounded-lg border-2 border-dashed border-blue-200">
-                                <div className="text-blue-400 mb-4">
-                                    <Plus className="h-12 w-12 mx-auto" />
-                                </div>
-                                <h3 className="text-lg font-medium text-blue-900 mb-2">
+                            <div className="text-center py-12">
+                                <h3 className="text-lg font-medium mb-2">
                                     No expressions yet
                                 </h3>
-                                <p className="text-blue-600 mb-4">
-                                    Add your first mathematical expression or graph to get started
+                                <p className="text-sm mb-4">
+                                    Add your first mathematical expression or graph on this page.
                                 </p>
                                 <Button
                                     onClick={() => setShowAddDialog(true)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    className="bg-education-600 hover:bg-education-700" size="sm"
                                 >
+                                    <Plus className="h-4 w-4" />
                                     Add Expression
                                 </Button>
                             </div>
                         )}
-
-
                     </div>
-
                     <AddExpressionDialog
                         open={showAddDialog}
                         onOpenChange={setShowAddDialog}
                         onAdd={addExpression}
                     />
                 </div>
-
             </main>
         </div>
     )
