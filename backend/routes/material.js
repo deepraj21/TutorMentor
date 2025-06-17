@@ -88,7 +88,6 @@ router.get('/:id', async (req, res) => {
 router.patch('/:id', async (req, res) => {
     try {
         const { teacherId, title, description, pdfLinks } = req.body;
-        console.log('Update request:', { teacherId, title, description, pdfLinks });
         
         const material = await Material.findById(req.params.id);
         

@@ -307,12 +307,6 @@ const MaterialsPage = () => {
       // Combine uploaded file URLs and manually entered URLs
       const allLinks = [...urlInputs.filter(url => url.trim() !== ''), ...uploadedLinks];
 
-      console.log('Updating material with:', {
-        title: newMaterial.title,
-        description: newMaterial.description,
-        pdfLinks: allLinks
-      });
-
       const updatedMaterial = await classroomApi.updateMaterial(selectedMaterial._id, {
         title: newMaterial.title,
         description: newMaterial.description || '',
@@ -912,27 +906,29 @@ const MaterialsPage = () => {
           <DialogHeader className="p-6 border-b">
             <DialogTitle>Update Material</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4 p-6">
+          <div className="grid gap-4 py-4 p-6 max-h-[18rem] overflow-y-auto">
             <div className="grid gap-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Material Title</Label>
               <Input
                 id="title"
                 value={newMaterial.title}
                 onChange={(e) => setNewMaterial(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter material title"
+                placeholder="e.g., Introduction to Variables"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description (Optional)</Label>
               <Input
                 id="description"
                 value={newMaterial.description}
                 onChange={(e) => setNewMaterial(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter material description"
+                placeholder="Add a description..."
               />
             </div>
+
+            {/* URL Inputs Section */}
             <div className="grid gap-2">
-              <Label>PDF Links</Label>
+              <Label>Material Links</Label>
               {urlInputs.map((url, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
@@ -943,22 +939,11 @@ const MaterialsPage = () => {
                       setUrlInputs(newUrls);
                       setNewMaterial(prev => ({ ...prev, pdfLinks: newUrls.filter(u => u.trim()) }));
                     }}
-                    placeholder="Enter PDF URL"
+                    placeholder="Paste material URL here"
                   />
-                  {index === urlInputs.length - 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setUrlInputs([...urlInputs, ''])}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
                   {urlInputs.length > 1 && (
                     <Button
-                      type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="icon"
                       onClick={() => {
                         const newUrls = urlInputs.filter((_, i) => i !== index);
@@ -971,71 +956,75 @@ const MaterialsPage = () => {
                   )}
                 </div>
               ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setUrlInputs([...urlInputs, ''])}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Another Link
+              </Button>
             </div>
+
+            {/* File Upload Section */}
             <div className="grid gap-2">
               <Label>Upload Files</Label>
-              <div
-                className={`border-2 border-dashed rounded-lg p-6 text-center ${isDragging ? 'border-education-600 bg-education-50' : 'border-gray-300'
-                  }`}
+              <Card
+                className={`border-2 border-dashed p-4 mb-4 text-center ${isDragging ? 'border-education-500 bg-education-50 dark:bg-education-900/20' : 'border-border'}`}
                 onDragOver={(e) => {
                   e.preventDefault();
                   setIsDragging(true);
                 }}
                 onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDragging(false);
-                  const droppedFiles = Array.from(e.dataTransfer.files);
-                  setFiles(prev => [...prev, ...droppedFiles]);
-                }}
+                onDrop={handleDrop}
               >
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf"
-                  className="hidden"
-                  onChange={(e) => {
-                    const selectedFiles = Array.from(e.target.files || []);
-                    setFiles(prev => [...prev, ...selectedFiles]);
-                  }}
-                  id="file-upload"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="cursor-pointer text-education-600 hover:text-education-700"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="h-8 w-8" />
-                    <span>Click to upload or drag and drop</span>
-                    <span className="text-sm text-gray-500">PDF files only</span>
+                <CardContent className="pt-4 flex flex-col items-center">
+                  <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Drag and drop files here or click to browse
+                  </p>
+                  <div>
+                    <label htmlFor="file-upload-update">
+                      <input
+                        id="file-upload-update"
+                        type="file"
+                        multiple
+                        onChange={handleFileInput}
+                        className="hidden"
+                      />
+                      <Button variant="outline" size="sm" className="mx-auto" asChild>
+                        <span>Browse Files</span>
+                      </Button>
+                    </label>
                   </div>
-                </label>
-              </div>
+                </CardContent>
+              </Card>
+
+              {/* Uploaded Files List */}
               {files.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-2">Selected Files:</h4>
-                  <ul className="space-y-2">
-                    {files.map((file, index) => (
-                      <li key={index} className="flex items-center justify-between text-sm">
-                        <span className="truncate">{file.name}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setFiles(files.filter((_, i) => i !== index))}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="space-y-2">
+                  {files.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                      <div className="flex items-center gap-2">
+                        <File className="h-6 w-6" />
+                        <span className="text-sm truncate">{file.name}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
           </div>
           <DialogFooter className="p-6 border-t">
             <Button
-              type="button"
               variant="outline"
               onClick={() => {
                 setIsUpdateDialogOpen(false);
@@ -1045,11 +1034,11 @@ const MaterialsPage = () => {
                 setUrlInputs(['']);
               }}
               className="hidden md:block"
+              disabled={isUpdating}
             >
               Cancel
             </Button>
             <Button
-              type="button"
               onClick={handleUpdateMaterial}
               disabled={isUpdating || !newMaterial.title.trim()}
             >

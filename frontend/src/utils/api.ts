@@ -353,7 +353,6 @@ export const classroomApi = {
       if (!teacherId) {
         throw new Error('Teacher ID not found');
       }
-      console.log('Updating material:', { materialId, data, teacherId });
       const response = await axios.patch(`${BACKEND_URL}/api/material/${materialId}`, {
         teacherId,
         title: data.title,
@@ -407,6 +406,30 @@ export const classroomApi = {
       throw new Error('Teacher ID not found');
     }
     const response = await axios.post(`${BACKEND_URL}/api/material-library`, { materialId, teacherId });
+    return response.data;
+  },
+
+  postToClassroom: async (materialId: string, classroomId: string) => {
+    const teacherId = localStorage.getItem('teacherId');
+    if (!teacherId) {
+      throw new Error('Teacher ID not found');
+    }
+    const response = await axios.post(`${BACKEND_URL}/api/material-library/post-to-classroom`, {
+      materialId,
+      classroomId,
+      teacherId
+    });
+    return response.data;
+  },
+
+  deleteFromLibrary: async (libraryMaterialId: string) => {
+    const teacherId = localStorage.getItem('teacherId');
+    if (!teacherId) {
+      throw new Error('Teacher ID not found');
+    }
+    const response = await axios.delete(`${BACKEND_URL}/api/material-library/${libraryMaterialId}`, {
+      data: { teacherId }
+    });
     return response.data;
   },
 

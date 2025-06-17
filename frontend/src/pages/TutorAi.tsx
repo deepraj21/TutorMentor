@@ -357,7 +357,7 @@ const TutorAi = () => {
                                         type="text"
                                         value={tempTitle}
                                         onChange={(e) => setTempTitle(e.target.value)}
-                                        className="bg-transparent outline-none"
+                                        className="bg-transparent outline-none max-w-[100px] truncate"
                                         autoFocus
                                     />
                                     <Check className="h-4 w-4 cursor-pointer" onClick={handleTitleSave} />
