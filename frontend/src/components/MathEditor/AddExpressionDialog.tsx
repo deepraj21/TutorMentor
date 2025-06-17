@@ -15,7 +15,7 @@ import { MathRenderer } from "@/components/MathEditor/MathRenderer";
 import { GraphRenderer } from "@/components/MathEditor/GraphRenderer";
 
 export interface Expression {
-  id: string;
+  _id: string;
   type: 'math' | 'graph';
   content: string;
   title?: string;
@@ -24,7 +24,7 @@ export interface Expression {
 interface AddExpressionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (expression: Omit<Expression, 'id'>) => void;
+  onAdd: (expression: Omit<Expression, '_id'>) => void;
 }
 
 export function AddExpressionDialog({ open, onOpenChange, onAdd }: AddExpressionDialogProps) {

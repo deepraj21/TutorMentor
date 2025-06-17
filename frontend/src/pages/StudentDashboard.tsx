@@ -113,7 +113,6 @@ const StudentDashboard = () => {
       <main className="flex-1 container max-w-6xl mx-auto py-8 px-4 bg-background max-h-[calc(100vh-75px)] overflow-y-scroll no-scrollbar">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl text-foreground flex items-center gap-2 font-semibold">Classes</h2>
-
           <div className="flex flex-row items-center gap-4">
             <Tabs defaultValue="grid" onValueChange={(value) => setViewMode(value as "grid" | "list")} className="hidden md:flex">
               <TabsList className="rounded-lg overflow-hidden border">

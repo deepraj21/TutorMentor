@@ -9,7 +9,7 @@ import html2canvas from "html2canvas";
 import { toast } from "sonner";
 
 export interface Expression {
-  id: string;
+  _id: string;
   type: 'math' | 'graph';
   content: string;
   title?: string;
@@ -42,16 +42,31 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
 
   const exportExpression = async () => {
     try {
-      const element = document.getElementById(`expression-${expression.id}`);
+      const element = document.getElementById(`expression-${expression._id}`);
       if (!element) return;
       
-      const canvas = await html2canvas(element, {
-        backgroundColor: '#ffffff',
+      // Find the expression content div within the card
+      const contentDiv = element.querySelector('.w-full') as HTMLElement;
+      if (!contentDiv) return;
+
+      // Check if dark mode is active
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      
+      const canvas = await html2canvas(contentDiv, {
         scale: 2,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+        backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff'
       });
       
+      // Create a sanitized filename from the expression content
+      const sanitizedContent = expression.content
+        .replace(/[^a-zA-Z0-9]/g, '_') // Replace special characters with underscore
+        .substring(0, 50); // Limit length to avoid too long filenames
+      
       const link = document.createElement('a');
-      link.download = `${expression.title || 'expression'}-${expression.id}.png`;
+      link.download = `${sanitizedContent}.png`;
       link.href = canvas.toDataURL();
       link.click();
       
@@ -64,7 +79,7 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
 
   return (
     <Card 
-      id={`expression-${expression.id}`}
+      id={`expression-${expression._id}`}
       className="border-none"
     >
       <CardHeader className="pb-3">

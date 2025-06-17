@@ -7,6 +7,7 @@ import classRoutes from './routes/classroom.js'
 import materialRoutes from './routes/material.js';
 import materialLibraryRoutes from './routes/materialLibrary.js';
 import aiRoutes from './routes/tutor-ai.js';
+import expressionRoutes from './routes/expressions.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/classroom', classRoutes);
 app.use('/api/material', materialRoutes);
 app.use('/api/material-library', materialLibraryRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/expressions', expressionRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the classroom API' });

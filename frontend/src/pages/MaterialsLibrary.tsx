@@ -120,8 +120,7 @@ const MaterialsLibrary = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header title="Materials Library" />
-      
-      <main className="flex-1 container max-w-6xl mx-auto py-8 px-4">
+      <main className="flex-1 container max-w-6xl mx-auto py-8 px-4 bg-background max-h-[calc(100vh-75px)] overflow-y-scroll no-scrollbar">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-semibold text-foreground">Library</h2>
           
