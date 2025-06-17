@@ -42,7 +42,6 @@ export const sendWelcomeEmail = async (studentEmail, studentName) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Welcome email sent successfully');
     } catch (error) {
         console.error('Error sending welcome email:', error);
     }
@@ -69,7 +68,6 @@ export const sendVerificationCode = async (email, name, code) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Verification code email sent successfully');
     } catch (error) {
         console.error('Error sending verification code email:', error);
         throw error;
@@ -93,7 +91,6 @@ export const sendPasswordResetEmail = async (email, name) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Password reset confirmation email sent successfully');
     } catch (error) {
         console.error('Error sending password reset confirmation email:', error);
         throw error;
@@ -127,7 +124,6 @@ export const sendClassInvite = async (recipientEmail, className, classCode, teac
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Class invite email sent successfully');
     } catch (error) {
         console.error('Error sending class invite email:', error);
         throw error;

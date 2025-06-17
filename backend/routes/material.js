@@ -87,6 +87,9 @@ router.get('/:id', async (req, res) => {
 // Update a material
 router.patch('/:id', async (req, res) => {
     try {
+        const { teacherId, title, description, pdfLinks } = req.body;
+        console.log('Update request:', { teacherId, title, description, pdfLinks });
+        
         const material = await Material.findById(req.params.id);
         
         if (!material) {
@@ -94,23 +97,32 @@ router.patch('/:id', async (req, res) => {
         }
 
         // Check if user is the one who posted the material
-        if (material.postedBy.toString() !== req.user._id.toString()) {
+        if (material.postedBy.toString() !== teacherId) {
             return res.status(403).json({ message: 'Not authorized to update this material' });
         }
 
-        const updates = Object.keys(req.body);
-        const allowedUpdates = ['title', 'description', 'pdfLinks'];
-        const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+        // Update the material fields
+        material.title = title;
+        material.description = description;
+        material.pdfLinks = pdfLinks;
 
-        if (!isValidOperation) {
-            return res.status(400).json({ message: 'Invalid updates' });
-        }
-
-        updates.forEach(update => material[update] = req.body[update]);
         await material.save();
 
-        res.json(material);
+        // Populate the material before sending response
+        const populatedMaterial = await Material.findById(material._id)
+            .populate('postedBy', 'name email')
+            .populate({
+                path: 'classroom',
+                select: 'name section createdAt createdBy',
+                populate: {
+                    path: 'createdBy',
+                    select: 'name email'
+                }
+            });
+
+        res.json(populatedMaterial);
     } catch (error) {
+        console.error('Update error:', error);
         res.status(400).json({ message: error.message });
     }
 });
@@ -118,6 +130,7 @@ router.patch('/:id', async (req, res) => {
 // Delete a material
 router.delete('/:id', async (req, res) => {
     try {
+        const { teacherId } = req.body;
         const material = await Material.findById(req.params.id);
         
         if (!material) {
@@ -125,7 +138,7 @@ router.delete('/:id', async (req, res) => {
         }
 
         // Check if user is the one who posted the material
-        if (material.postedBy.toString() !== req.user._id.toString()) {
+        if (material.postedBy.toString() !== teacherId) {
             return res.status(403).json({ message: 'Not authorized to delete this material' });
         }
 
@@ -134,7 +147,7 @@ router.delete('/:id', async (req, res) => {
         classroom.materials = classroom.materials.filter(m => m.toString() !== material._id.toString());
         await classroom.save();
 
-        await material.remove();
+        await Material.findByIdAndDelete(material._id);
         res.json({ message: 'Material deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });

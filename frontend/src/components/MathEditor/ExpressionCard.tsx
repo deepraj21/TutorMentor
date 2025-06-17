@@ -7,6 +7,13 @@ import { MathRenderer } from "@/components/MathEditor/MathRenderer";
 import { GraphRenderer } from "@/components/MathEditor/GraphRenderer";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export interface Expression {
   _id: string;
@@ -25,6 +32,7 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(expression.content);
   const [editTitle, setEditTitle] = useState(expression.title || "");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const saveEdit = () => {
     onUpdate({ 
@@ -77,95 +85,126 @@ export function ExpressionCard({ expression, onUpdate, onDelete }: ExpressionCar
     }
   };
 
+  const handleDelete = () => {
+    onDelete();
+    setIsDeleteDialogOpen(false);
+  };
+
   return (
-    <Card 
-      id={`expression-${expression._id}`}
-      className="border-none"
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {expression.type === 'math' ? (
-              <Calculator className="h-5 w-5 text-blue-600" />
-            ) : (
-              <LineChart className="h-5 w-5 text-green-600" />
-            )}
-            {isEditing ? (
-              <Input
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="Expression title (optional)"
-                className="h-8 text-sm font-medium"
-              />
-            ) : (
-              <h3 className="font-medium">
-                {expression.title || `${expression.type === 'math' ? 'Math' : 'Graph'} Expression`}
-              </h3>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={exportExpression}
-              className="h-8 w-8 p-0"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsEditing(!isEditing)}
-              className="h-8 w-8 p-0"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDelete}
-              className="h-8 w-8 p-0 text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        {isEditing ? (
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                {expression.type === 'math' ? 'LaTeX Expression' : 'Function (e.g., x^2, sin(x))'}
-              </label>
-              <Input
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                placeholder={expression.type === 'math' ? '\\frac{d}{dx}(x^2) = 2x' : 'x^2'}
-                className="font-mono"
-              />
+    <>
+      <Card 
+        id={`expression-${expression._id}`}
+        className="border-none"
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {expression.type === 'math' ? (
+                <Calculator className="h-5 w-5 text-blue-600" />
+              ) : (
+                <LineChart className="h-5 w-5 text-green-600" />
+              )}
+              {isEditing ? (
+                <Input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Expression title (optional)"
+                  className="h-8 text-sm font-medium"
+                />
+              ) : (
+                <h3 className="font-medium">
+                  {expression.title || `${expression.type === 'math' ? 'Math' : 'Graph'} Expression`}
+                </h3>
+              )}
             </div>
-            <div className="flex gap-2">
-              <Button onClick={saveEdit} size="sm" className="bg-education-600 hover:bg-education-700">
-                Save
+            
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={exportExpression}
+                className="h-8 w-8 p-0"
+              >
+                <Download className="h-4 w-4" />
               </Button>
-              <Button onClick={cancelEdit} variant="outline" size="sm">
-                Cancel
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditing(!isEditing)}
+                className="h-8 w-8 p-0"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                className="h-8 w-8 p-0 text-red-600"
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
-        ) : (
-          <div className="w-full">
-            {expression.type === 'math' ? (
-              <MathRenderer content={expression.content} />
-            ) : (
-              <GraphRenderer expression={expression.content} />
-            )}
+        </CardHeader>
+        
+        <CardContent>
+          {isEditing ? (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  {expression.type === 'math' ? 'LaTeX Expression' : 'Function (e.g., x^2, sin(x))'}
+                </label>
+                <Input
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  placeholder={expression.type === 'math' ? '\\frac{d}{dx}(x^2) = 2x' : 'x^2'}
+                  className="font-mono"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={saveEdit} size="sm" className="bg-education-600 hover:bg-education-700">
+                  Save
+                </Button>
+                <Button onClick={cancelEdit} variant="outline" size="sm">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full">
+              {expression.type === 'math' ? (
+                <MathRenderer content={expression.content} />
+              ) : (
+                <GraphRenderer expression={expression.content} />
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader className="p-6 border-b">
+            <DialogTitle>Delete Expression</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 p-6">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete this {expression.type} expression? This action cannot be undone.
+            </p>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <DialogFooter className="p-6 border-t">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="hidden md:block">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleDelete}
+              variant="destructive"
+            >
+              Delete Expression
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

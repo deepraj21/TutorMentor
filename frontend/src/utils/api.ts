@@ -343,9 +343,42 @@ export const classroomApi = {
     }
   },
 
+  updateMaterial: async (materialId: string, data: {
+    title: string;
+    description?: string;
+    pdfLinks: string[];
+  }): Promise<Material> => {
+    try {
+      const teacherId = localStorage.getItem('teacherId');
+      if (!teacherId) {
+        throw new Error('Teacher ID not found');
+      }
+      console.log('Updating material:', { materialId, data, teacherId });
+      const response = await axios.patch(`${BACKEND_URL}/api/material/${materialId}`, {
+        teacherId,
+        title: data.title,
+        description: data.description || '',
+        pdfLinks: data.pdfLinks
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Update material error:', error.response?.data);
+        throw new Error(error.response?.data?.message || 'Failed to update material');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
   deleteMaterial: async (materialId: string): Promise<{ message: string }> => {
     try {
-      const response = await axios.delete(`${BACKEND_URL}/api/material/${materialId}`);
+      const teacherId = localStorage.getItem('teacherId');
+      if (!teacherId) {
+        throw new Error('Teacher ID not found');
+      }
+      const response = await axios.delete(`${BACKEND_URL}/api/material/${materialId}`, {
+        data: { teacherId }
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -396,6 +429,30 @@ export const classroomApi = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(error.response?.data?.message || 'Failed to send class invites');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  removeTeacher: async (classroomId: string, teacherId: string): Promise<{ message: string }> => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/classroom/teacher-unenroll/${classroomId}`, { teacherId });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to remove teacher');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  removeStudent: async (classroomId: string, studentId: string): Promise<{ message: string }> => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/classroom/unenroll/${classroomId}`, { studentId });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to remove student');
       }
       throw new Error('An unexpected error occurred');
     }

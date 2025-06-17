@@ -29,6 +29,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import pdfImg from "@/assets/pdfImg.png"
 
+interface UserData {
+  id: string;
+  uid: string;
+  email: string;
+  name: string;
+  displayName?: string;
+  photoURL?: string;
+  role: "student" | "teacher";
+}
+
 const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
@@ -101,6 +111,15 @@ const MaterialsPage = () => {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isRemovingTeacher, setIsRemovingTeacher] = useState(false);
+  const [isRemovingStudent, setIsRemovingStudent] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<{ _id: string; name: string } | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<{ _id: string; name: string } | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRemoveTeacherDialogOpen, setIsRemoveTeacherDialogOpen] = useState(false);
+  const [isRemoveStudentDialogOpen, setIsRemoveStudentDialogOpen] = useState(false);
 
   useEffect(() => {
     if (classId) {
@@ -248,7 +267,7 @@ const MaterialsPage = () => {
 
   const handleShareToLibrary = async () => {
     if (!selectedMaterial) return;
-    
+
     setIsSharing(true);
     try {
       await classroomApi.shareToLibrary(selectedMaterial._id);
@@ -261,16 +280,125 @@ const MaterialsPage = () => {
     }
   };
 
+  const handleUpdateMaterial = async () => {
+    if (!selectedMaterial) return;
+    setIsUpdating(true);
+    try {
+      // Upload any new files
+      const uploadedLinks = await Promise.all(
+        files.map(async (file) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', uploadPreset);
+
+          const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+            {
+              method: 'POST',
+              body: formData,
+            }
+          );
+
+          const data = await response.json();
+          return data.secure_url;
+        })
+      );
+
+      // Combine uploaded file URLs and manually entered URLs
+      const allLinks = [...urlInputs.filter(url => url.trim() !== ''), ...uploadedLinks];
+
+      console.log('Updating material with:', {
+        title: newMaterial.title,
+        description: newMaterial.description,
+        pdfLinks: allLinks
+      });
+
+      const updatedMaterial = await classroomApi.updateMaterial(selectedMaterial._id, {
+        title: newMaterial.title,
+        description: newMaterial.description || '',
+        pdfLinks: allLinks
+      });
+
+      setMaterials(materials.map(m => m._id === selectedMaterial._id ? updatedMaterial : m));
+      setIsUpdateDialogOpen(false);
+      setSelectedMaterial(null);
+      setNewMaterial({ title: "", description: "", pdfLinks: [] });
+      setFiles([]);
+      setUrlInputs(['']);
+      toast.success("Material updated successfully");
+    } catch (error) {
+      console.error('Update material error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to update material");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRemoveTeacher = async () => {
+    if (!classId || !selectedTeacher) return;
+    try {
+      await classroomApi.removeTeacher(classId, selectedTeacher._id);
+      setClassroomDetails(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          enrolledTeachers: prev.enrolledTeachers.filter(t => t._id !== selectedTeacher._id)
+        };
+      });
+      toast.success("Teacher removed successfully");
+      setIsRemoveTeacherDialogOpen(false);
+      setSelectedTeacher(null);
+    } catch (error) {
+      toast.error("Failed to remove teacher");
+    } finally {
+      setIsRemovingTeacher(false);
+    }
+  };
+
+  const handleRemoveStudent = async () => {
+    if (!classId || !selectedStudent) return;
+    try {
+      await classroomApi.removeStudent(classId, selectedStudent._id);
+      setClassroomDetails(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          enrolledStudents: prev.enrolledStudents.filter(s => s._id !== selectedStudent._id)
+        };
+      });
+      toast.success("Student removed successfully");
+      setIsRemoveStudentDialogOpen(false);
+      setSelectedStudent(null);
+    } catch (error) {
+      toast.error("Failed to remove student");
+    } finally {
+      setIsRemovingStudent(false);
+    }
+  };
+
+  const handleDeleteMaterial = async () => {
+    if (!selectedMaterial) return;
+    try {
+      await classroomApi.deleteMaterial(selectedMaterial._id);
+      setMaterials(materials.filter(m => m._id !== selectedMaterial._id));
+      toast.success("Material deleted successfully");
+      setIsDeleteDialogOpen(false);
+      setSelectedMaterial(null);
+    } catch (error) {
+      toast.error("Failed to delete material");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header title="Class Materials" />
         <main className="flex-1 container max-w-6xl mx-auto py-8 px-4 bg-background max-h-[calc(100vh-100px)] overflow-y-scroll no-scrollbar">
           <div className="">
-          <Link to={user?.role === "teacher" ? "/teacher" : "/student"} className="inline-flex items-center text-sm text-education-600 mb-4 hover:text-education-800 transition-colors">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to dashboard
-          </Link>
+            <Link to={user?.role === "teacher" ? "/teacher" : "/student"} className="inline-flex items-center text-sm text-education-600 mb-4 hover:text-education-800 transition-colors">
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Back to dashboard
+            </Link>
             <div className="flex justify-between items-start">
               <div>
                 <div className="h-8 w-64 bg-muted rounded mb-2" />
@@ -533,7 +661,7 @@ const MaterialsPage = () => {
                               <DropdownMenuContent>
                                 <DropdownMenuLabel>{material.title}</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="flex flex-row justify-between items-center"
                                   onClick={() => {
                                     setSelectedMaterial(material);
@@ -542,11 +670,28 @@ const MaterialsPage = () => {
                                 >
                                   Share <Share2 className="h-4 w-4 text-gray-600" />
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="flex flex-row justify-between items-center">
+                                <DropdownMenuItem
+                                  className="flex flex-row justify-between items-center"
+                                  onClick={() => {
+                                    setSelectedMaterial(material);
+                                    setNewMaterial({
+                                      title: material.title,
+                                      description: material.description || "",
+                                      pdfLinks: material.pdfLinks
+                                    });
+                                    setUrlInputs(material.pdfLinks.length > 0 ? [...material.pdfLinks] : ['']);
+                                    setFiles([]);
+                                    setIsUpdateDialogOpen(true);
+                                  }}
+                                >
                                   Update <PencilLine className="h-4 w-4 text-education-600" />
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="flex flex-row justify-between items-center text-red-600"
+                                  onClick={() => {
+                                    setSelectedMaterial(material);
+                                    setIsDeleteDialogOpen(true);
+                                  }}
                                 >
                                   Delete <Trash2 className="h-4 w-4 text-red-800" />
                                 </DropdownMenuItem>
@@ -580,19 +725,19 @@ const MaterialsPage = () => {
                               className="border rounded-md flex items-center overflow-hidden hover:bg-muted transition-colors"
                             >
                               {/* Preview Placeholder */}
-                                <div className="w-[20%] flex items-center justify-center bg-gray-100 dark:bg-gray-700 border-r h-full">
-                                  <img
-                                    src={link}
-                                    alt="Material Preview"
-                                    className="h-20 w-full object-cover"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.onerror = null;
-                                      target.src = pdfImg;
-                                      target.className = "h-20 w-full object-cover";
-                                    }}
-                                  />
-                                </div>
+                              <div className="w-[20%] flex items-center justify-center bg-gray-100 dark:bg-gray-700 border-r h-full">
+                                <img
+                                  src={link}
+                                  alt="Material Preview"
+                                  className="h-20 w-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null;
+                                    target.src = pdfImg;
+                                    target.className = "h-20 w-full object-cover";
+                                  }}
+                                />
+                              </div>
                               {/* Filename */}
                               <span className="flex-1 p-6 text-sm truncate">
                                 {filename}
@@ -646,7 +791,7 @@ const MaterialsPage = () => {
                     <p className="text-sm text-muted-foreground">Class Code:</p>
                     {user?.role === "teacher" ? (
                       <p className="font-medium">{classroomDetails.classCode}</p>
-                    ) : '•'.repeat(6) }
+                    ) : '•'.repeat(6)}
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Created By:</p>
@@ -662,13 +807,31 @@ const MaterialsPage = () => {
               <div className="md:col-span-2 p-6 border-b">
                 <h4 className="text-lg font-semibold mb-2">Teachers</h4>
                 {classroomDetails.enrolledTeachers.length > 0 ? (
-                  <ul className="flex justify-between items-center">
+                  <ul className="space-y-2">
                     {classroomDetails.enrolledTeachers.map(teacher => (
-                      <li key={teacher._id}>{teacher.name} ({teacher.email})</li>
+                      <li key={teacher._id} className="flex justify-between items-center">
+                        <span>{teacher.name} ({teacher.email})</span>
+                        {user && classroomDetails?.createdBy._id === user.id && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTeacher(teacher);
+                                setIsRemoveTeacherDialogOpen(true);
+                              }}
+                              disabled={isRemovingTeacher}
+                            >
+                              {isRemovingTeacher && selectedTeacher?._id === teacher._id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                "Remove"
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </li>
                     ))}
-                    {user?.role === "teacher" && (
-                    <Button variant="destructive">Remove</Button>
-                    )}
                   </ul>
                 ) : (
                   <p className="text-sm text-muted-foreground">No additional teachers enrolled.</p>
@@ -677,13 +840,31 @@ const MaterialsPage = () => {
               <div className="md:col-span-2 p-6">
                 <h4 className="text-lg font-semibold mb-2">Students</h4>
                 {classroomDetails.enrolledStudents.length > 0 ? (
-                  <ul className="flex justify-between items-center">
+                  <ul className="space-y-2">
                     {classroomDetails.enrolledStudents.map(student => (
-                      <li key={student._id}>{student.name} ({student.email})</li>
+                      <li key={student._id} className="flex justify-between items-center">
+                        <span>{student.name} ({student.email})</span>
+                        {user && classroomDetails?.createdBy._id === user.id && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedStudent(student);
+                                setIsRemoveStudentDialogOpen(true);
+                              }}
+                              disabled={isRemovingStudent}
+                            >
+                              {isRemovingStudent && selectedStudent?._id === student._id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                "Remove"
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </li>
                     ))}
-                    {user?.role === "teacher" && (
-                    <Button variant="destructive">Remove</Button>
-                    )}
                   </ul>
                 ) : (
                   <p className="text-sm text-muted-foreground">No students enrolled yet.</p>
@@ -708,7 +889,7 @@ const MaterialsPage = () => {
             <Button variant="outline" onClick={() => setIsShareDialogOpen(false)} className="hidden md:block">
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleShareToLibrary}
               disabled={isSharing}
             >
@@ -719,6 +900,254 @@ const MaterialsPage = () => {
                 </>
               ) : (
                 'Share to Library'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Material Dialog */}
+      <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader className="p-6 border-b">
+            <DialogTitle>Update Material</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 p-6">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={newMaterial.title}
+                onChange={(e) => setNewMaterial(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter material title"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={newMaterial.description}
+                onChange={(e) => setNewMaterial(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter material description"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>PDF Links</Label>
+              {urlInputs.map((url, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={url}
+                    onChange={(e) => {
+                      const newUrls = [...urlInputs];
+                      newUrls[index] = e.target.value;
+                      setUrlInputs(newUrls);
+                      setNewMaterial(prev => ({ ...prev, pdfLinks: newUrls.filter(u => u.trim()) }));
+                    }}
+                    placeholder="Enter PDF URL"
+                  />
+                  {index === urlInputs.length - 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setUrlInputs([...urlInputs, ''])}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {urlInputs.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        const newUrls = urlInputs.filter((_, i) => i !== index);
+                        setUrlInputs(newUrls);
+                        setNewMaterial(prev => ({ ...prev, pdfLinks: newUrls.filter(u => u.trim()) }));
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-2">
+              <Label>Upload Files</Label>
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 text-center ${isDragging ? 'border-education-600 bg-education-50' : 'border-gray-300'
+                  }`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const droppedFiles = Array.from(e.dataTransfer.files);
+                  setFiles(prev => [...prev, ...droppedFiles]);
+                }}
+              >
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const selectedFiles = Array.from(e.target.files || []);
+                    setFiles(prev => [...prev, ...selectedFiles]);
+                  }}
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer text-education-600 hover:text-education-700"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="h-8 w-8" />
+                    <span>Click to upload or drag and drop</span>
+                    <span className="text-sm text-gray-500">PDF files only</span>
+                  </div>
+                </label>
+              </div>
+              {files.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Selected Files:</h4>
+                  <ul className="space-y-2">
+                    {files.map((file, index) => (
+                      <li key={index} className="flex items-center justify-between text-sm">
+                        <span className="truncate">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="p-6 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsUpdateDialogOpen(false);
+                setSelectedMaterial(null);
+                setNewMaterial({ title: "", description: "", pdfLinks: [] });
+                setFiles([]);
+                setUrlInputs(['']);
+              }}
+              className="hidden md:block"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleUpdateMaterial}
+              disabled={isUpdating || !newMaterial.title.trim()}
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Update Material'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader className="p-6 border-b">
+            <DialogTitle>Delete Material</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 p-6">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete "{selectedMaterial?.title}"? This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter className="p-6 border-t">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="hidden md:block">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteMaterial}
+              variant="destructive"
+            >
+              Delete Material
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRemoveTeacherDialogOpen} onOpenChange={setIsRemoveTeacherDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader className="p-6 border-b">
+            <DialogTitle>Remove Teacher</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 p-6">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to remove {selectedTeacher?.name} from this classroom? They will no longer have access to this classroom.
+            </p>
+          </div>
+          <DialogFooter className="p-6 border-t">
+            <Button variant="outline" onClick={() => setIsRemoveTeacherDialogOpen(false)} className="hidden md:block">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRemoveTeacher}
+              variant="destructive"
+              disabled={isRemovingTeacher}
+            >
+              {isRemovingTeacher ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                'Remove Teacher'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRemoveStudentDialogOpen} onOpenChange={setIsRemoveStudentDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader className="p-6 border-b">
+            <DialogTitle>Remove Student</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 p-6">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to remove {selectedStudent?.name} from this classroom? They will no longer have access to this classroom.
+            </p>
+          </div>
+          <DialogFooter className="p-6 border-t">
+            <Button variant="outline" onClick={() => setIsRemoveStudentDialogOpen(false)} className="hidden md:block">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRemoveStudent}
+              variant="destructive"
+              disabled={isRemovingStudent}
+            >
+              {isRemovingStudent ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                'Remove Student'
               )}
             </Button>
           </DialogFooter>
