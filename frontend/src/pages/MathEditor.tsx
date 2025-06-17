@@ -2,7 +2,7 @@ import Header from "@/components/layout/Header"
 import { AddExpressionDialog } from "@/components/MathEditor/AddExpressionDialog";
 import { ExpressionCard } from "@/components/MathEditor/ExpressionCard";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -140,12 +140,13 @@ const MathEditor = () => {
                             <Plus className="h-4 w-4" />
                             <span className="hidden md:block">Add Expression</span>
                         </Button>
-                        <div>
+                        <div className="mr-[2px] flex items-center border rounded-md focus-within:ring-0 focus-within:border-education-600">
+                            <Search className="h-4 w-4 ml-2 text-muted-foreground" />
                             <Input
                                 placeholder="Search by title..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-[200px] md:w-[300px]"
+                                className="w-[200px] md:w-[300px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
                             />
                         </div>
                     </div>

@@ -289,16 +289,6 @@ const TeacherDashboard = () => {
         >
           <RefreshCw className="h-4 w-4" />
         </button>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setSelectedClass(cls);
-            setShareDialogOpen(true);
-          }}
-        >
-          <Share2 className="h-4 w-4" />
-        </button>
       </div>
     );
   };
@@ -530,7 +520,17 @@ const TeacherDashboard = () => {
                                 <DropdownMenuContent>
                                   <DropdownMenuLabel>{cls.name}</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="flex flex-row justify-between items-center">Archive <Archive className="h-4 w-4 text-gray-700" /></DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    className="flex flex-row justify-between items-center"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setSelectedClass(cls);
+                                      setShareDialogOpen(true);
+                                    }}
+                                  >
+                                    Share <Share2 className="h-4 w-4 text-gray-700" />
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem 
                                     className="flex flex-row justify-between items-center text-red-600"
                                     onClick={(e) => {
@@ -556,7 +556,17 @@ const TeacherDashboard = () => {
                                   <DropdownMenuContent>
                                     <DropdownMenuLabel>{cls.name}</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="flex flex-row justify-between items-center">Archive <Archive className="h-4 w-4 text-gray-700" /></DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="flex flex-row justify-between items-center"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setSelectedClass(cls);
+                                        setShareDialogOpen(true);
+                                      }}
+                                    >
+                                      Share <Share2 className="h-4 w-4 text-gray-700" />
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem 
                                       className="flex flex-row justify-between items-center text-red-600"
                                       onClick={(e) => {
