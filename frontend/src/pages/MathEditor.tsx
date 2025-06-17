@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -153,19 +154,19 @@ const MathEditor = () => {
                             {loading ? (
                                 <div className="space-y-4 p-4">
                                     {[1, 2, 3].map((index) => (
-                                        <div key={index} className="animate-pulse">
+                                        <div key={index}>
                                             <div className="flex items-center justify-between mb-3">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 rounded" />
-                                                    <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+                                                    <Skeleton className="h-5 w-5" />
+                                                    <Skeleton className="h-6 w-48" />
                                                 </div>
                                                 <div className="flex gap-1">
-                                                    <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
-                                                    <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
-                                                    <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
+                                                    <Skeleton className="h-8 w-8" />
+                                                    <Skeleton className="h-8 w-8" />
+                                                    <Skeleton className="h-8 w-8" />
                                                 </div>
                                             </div>
-                                            <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded" />
+                                            <Skeleton className="h-24 w-full" />
                                         </div>
                                     ))}
                                 </div>
