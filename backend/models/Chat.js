@@ -21,7 +21,8 @@ const chatSchema = new mongoose.Schema({
       text: {
         type: String,
         required: true
-      }
+      },
+      images: [String]
     }]
   }],
   title: {

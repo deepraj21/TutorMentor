@@ -66,42 +66,36 @@ const TutorAi = () => {
     const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null)
     const [isUploadingImage, setIsUploadingImage] = useState(false)
 
-    useEffect(() => {
-        const fetchChats = async () => {
-            setLoading(true)
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/ai/chats`, {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        email: user.email,
-                        userModel,
-                    }),
-                })
+    const fetchChats = async () => {
+        setLoading(true)
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/ai/chats`, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: user.email,
+                    userModel,
+                }),
+            })
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`)
-                }
-
-                const data = await response.json()
-                setChats(data)
-                setFilteredChats(data)
-                setError("")
-            } catch {
-                setChats([])
-                setFilteredChats([])
-            } finally {
-                setLoading(false)
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
             }
-        }
 
-        if (user?.email) {
-            fetchChats()
+            const data = await response.json()
+            setChats(data)
+            setFilteredChats(data)
+            setError("")
+        } catch {
+            setChats([])
+            setFilteredChats([])
+        } finally {
+            setLoading(false)
         }
-    }, [user?.email, userModel])
+    }
 
     // Filter chats based on search query
     useEffect(() => {
@@ -482,7 +476,15 @@ const TutorAi = () => {
                     </div>
 
                     <div className="top-5 right-10 cursor-pointer">
-                        <Popover open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+                        <Popover
+                            open={isHistoryOpen}
+                            onOpenChange={(open) => {
+                                setIsHistoryOpen(open);
+                                if (open && user?.email) {
+                                    fetchChats();
+                                }
+                            }}
+                        >
                             <PopoverTrigger asChild>
                                 <Button className="bg-education-600 hover:bg-education-700" size={"sm"}>
                                     <span className="hidden md:flex">history</span>

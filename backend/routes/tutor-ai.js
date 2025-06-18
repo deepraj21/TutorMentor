@@ -42,6 +42,17 @@ router.post('/stream', async (req, res) => {
       }
     }
 
+    // Sanitize history for Gemini API
+    function sanitizeHistory(history) {
+      return (history || []).map(msg => ({
+        role: msg.role,
+        parts: msg.parts.map(part => ({
+          text: part.text || ""
+        }))
+      }));
+    }
+    const sanitizedHistory = sanitizeHistory(history);
+
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
       systemInstruction: `
@@ -52,7 +63,7 @@ router.post('/stream', async (req, res) => {
     });
 
     const chat = model.startChat({
-      history: history || []
+      history: sanitizedHistory
     });
 
     let contents = [];
