@@ -17,7 +17,7 @@ import { Loader2 } from "lucide-react"
 
 interface ChatMessage {
     role: "user" | "model"
-    parts: { text: string }[]
+    parts: { text: string, images?: string[] }[]
 }
 
 interface ChatPreview {
@@ -61,9 +61,10 @@ const TutorAi = () => {
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const [filteredChats, setFilteredChats] = useState<ChatPreview[]>([])
-    const [selectedImage, setSelectedImage] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [selectedImages, setSelectedImages] = useState<File[]>([])
+    const [imagePreviews, setImagePreviews] = useState<string[]>([])
+    const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null)
+    const [isUploadingImage, setIsUploadingImage] = useState(false)
 
     useEffect(() => {
         const fetchChats = async () => {
@@ -213,50 +214,71 @@ const TutorAi = () => {
         }
     };
 
-    const handleImageUpload = async (file: File) => {
-        if (!file) return;
-        
-        // Check file size
-        if (file.size > MAX_IMAGE_SIZE) {
-            toast.error('Image size too large. Maximum size is 20MB.');
+    const handleImageUpload = async (files: FileList | null) => {
+        if (!files) return;
+
+        // Check if adding these files would exceed the 4 image limit
+        if (selectedImages.length + files.length > 4) {
+            toast.error('Maximum 4 images allowed.');
             return;
         }
 
-        // Check file type
-        if (!file.type.startsWith('image/')) {
-            toast.error('Please upload an image file.');
-            return;
-        }
+        const newFiles = Array.from(files);
         
+        // Check file sizes and types
+        for (const file of newFiles) {
+            if (file.size > MAX_IMAGE_SIZE) {
+                toast.error('One or more images exceed the maximum size of 20MB.');
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                toast.error('Please upload only image files.');
+                return;
+            }
+        }
+
         setIsUploadingImage(true);
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', uploadPreset);
+            const newPreviews: string[] = [];
+            const uploadedFiles: File[] = [];
 
-            const response = await fetch(
-                `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
-                {
-                    method: 'POST',
-                    body: formData,
+            for (const file of newFiles) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', uploadPreset);
+
+                const response = await fetch(
+                    `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+                    {
+                        method: 'POST',
+                        body: formData,
+                    }
+                );
+
+                const data = await response.json();
+                if (data.secure_url) {
+                    newPreviews.push(data.secure_url);
+                    uploadedFiles.push(file);
                 }
-            );
-
-            const data = await response.json();
-            if (data.secure_url) {
-                setSelectedImage(file);
-                setImagePreview(data.secure_url);
             }
+
+            setSelectedImages(prev => [...prev, ...uploadedFiles]);
+            setImagePreviews(prev => [...prev, ...newPreviews]);
         } catch (error) {
-            console.error('Error uploading image:', error);
-            toast.error('Failed to upload image');
+            console.error('Error uploading images:', error);
+            toast.error('Failed to upload images');
         } finally {
             setIsUploadingImage(false);
         }
     };
 
+    const handleRemoveImage = (index: number) => {
+        setSelectedImages(prev => prev.filter((_, i) => i !== index));
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleSendMessage = async (userMessage: string) => {
-        if (!userMessage.trim() && !selectedImage) return;
+        if (!userMessage.trim() && selectedImages.length === 0) return;
 
         if (!user) {
             setChatHistory([
@@ -273,7 +295,14 @@ const TutorAi = () => {
             return
         }
 
-        const newHistory = [...chatHistory, { role: "user" as const, parts: [{ text: userMessage }] }]
+        // Store imagePreviews in chatHistory for user message
+        const newHistory = [
+            ...chatHistory,
+            {
+                role: "user" as const,
+                parts: [{ text: userMessage, images: imagePreviews.length > 0 ? [...imagePreviews] : undefined }]
+            }
+        ];
 
         setChatHistory(newHistory)
         setIsWaiting(true)
@@ -284,16 +313,18 @@ const TutorAi = () => {
 
         try {
             let imageData = null;
-            if (selectedImage) {
-                // Convert image to base64
-                imageData = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const base64data = reader.result as string;
-                        resolve(base64data.split(',')[1]);
-                    };
-                    reader.readAsDataURL(selectedImage);
-                });
+            if (selectedImages.length > 0) {
+                // Convert images to base64
+                imageData = await Promise.all(selectedImages.map(file => 
+                    new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const base64data = reader.result as string;
+                            resolve(base64data.split(',')[1]);
+                        };
+                        reader.readAsDataURL(file);
+                    })
+                ));
             }
 
             const response = await fetch(`${BACKEND_URL}/api/ai/stream`, {
@@ -310,7 +341,7 @@ const TutorAi = () => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({ error: 'Failed to process request' }));
                 throw new Error(errorData.error || 'Failed to process request');
             }
 
@@ -326,19 +357,24 @@ const TutorAi = () => {
             const decoder = new TextDecoder()
             let modelResponse = ""
 
-            while (true) {
-                const { value, done } = await reader.read()
-                if (done) break
+            try {
+                while (true) {
+                    const { value, done } = await reader.read()
+                    if (done) break
 
-                const chunk = decoder.decode(value, { stream: true })
-                setStreamingText((prev) => prev + chunk)
-                modelResponse += chunk
+                    const chunk = decoder.decode(value, { stream: true })
+                    setStreamingText((prev) => prev + chunk)
+                    modelResponse += chunk
+                }
+            } catch (streamError) {
+                console.error("Stream reading error:", streamError);
+                throw new Error("Error reading stream response");
             }
 
             setChatHistory([...newHistory, { role: "model" as const, parts: [{ text: modelResponse }] }])
-            // Clear image after sending
-            setSelectedImage(null);
-            setImagePreview(null);
+            // Clear images after sending
+            setSelectedImages([]);
+            setImagePreviews([]);
         } catch (error) {
             console.error("Chat error:", error)
             setChatHistory([
@@ -530,7 +566,23 @@ const TutorAi = () => {
                                 >
                                     <div className="markdown prose dark:prose-invert max-w-none break-words">
                                         {message.role === "user" ? (
-                                            message.parts[0].text
+                                            <>
+                                                {message.parts[0].text}
+                                                {/* Render user images if present */}
+                                                {message.parts[0].images && message.parts[0].images.length > 0 && (
+                                                    <div className="flex gap-2 mt-2">
+                                                        {message.parts[0].images.map((img, idx) => (
+                                                            <img
+                                                                key={idx}
+                                                                src={img}
+                                                                alt={`User uploaded ${idx + 1}`}
+                                                                className="h-20 w-20 object-contain rounded cursor-pointer"
+                                                                onClick={() => setSelectedPreviewImage(img)}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </>
                                         ) : (
                                             <ReactMarkdown
                                                 rehypePlugins={[rehypeRaw]}
@@ -818,22 +870,24 @@ const TutorAi = () => {
                     )}
                 </div>
                 <div className="relative">
-                    {imagePreview && (
-                        <div className="-mt-20 absolute bg-muted p-2 rounded-lg border shadow-lg">
-                            <img 
-                                src={imagePreview} 
-                                alt="Preview" 
-                                className="h-14 w-14 rounded-lg object-contain"
-                            />
-                            <button
-                                onClick={() => {
-                                    setSelectedImage(null);
-                                    setImagePreview(null);
-                                }}
-                                className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/70"
-                            >
-                                <X className="h-4 w-4 text-white" />
-                            </button>
+                    {imagePreviews.length > 0 && (
+                        <div className="-mt-20 absolute bg-muted p-2 rounded-lg border shadow-lg flex gap-2">
+                            {imagePreviews.map((preview, index) => (
+                                <div key={index} className="relative">
+                                    <img
+                                        src={preview}
+                                        alt={`Preview ${index + 1}`}
+                                        className="h-14 w-14 rounded-lg object-contain cursor-pointer"
+                                        onClick={() => setSelectedPreviewImage(preview)}
+                                    />
+                                    <button
+                                        onClick={() => handleRemoveImage(index)}
+                                        className="absolute -top-1 -right-1 p-1 bg-black/50 rounded-full hover:bg-black/70"
+                                    >
+                                        <X className="h-4 w-4 text-white" />
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     )}
                     <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700 border-gray-300 overflow-hidden shadow-lg">
@@ -844,32 +898,29 @@ const TutorAi = () => {
                             disabled={isWaiting || !isLoggedIn}
                             className="resize-none dark:bg-gray-800/50 border-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
                             onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey && (userMessage.trim() || selectedImage)) {
+                                if (e.key === "Enter" && !e.shiftKey && (userMessage.trim() || selectedImages.length > 0)) {
                                     e.preventDefault();
                                     handleSendMessage(userMessage);
                                 }
                             }}
                         />
                         <div className="p-2 flex items-center justify-between">
-                        <Tabs defaultValue="English" onValueChange={(value) => setChatLanguage(value)}>
-                                    <TabsList>
-                                        <TabsTrigger value="English" className="h-7 w-10 rounded-full">en</TabsTrigger>
-                                        <TabsTrigger value="Bengali" className="h-7 w-10 rounded-full">বাং</TabsTrigger>
-                                    </TabsList>
-                                </Tabs>
+                            <Tabs defaultValue="English" onValueChange={(value) => setChatLanguage(value)}>
+                                <TabsList className="border rounded-full dark:border-gray-700 shadow-lg">
+                                    <TabsTrigger value="English" className="h-7 w-10 rounded-full">en</TabsTrigger>
+                                    <TabsTrigger value="Bengali" className="h-7 w-10 rounded-full">বাং</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
                             <div className="flex items-center gap-2">
-                               
                                 <div className="relative">
                                     <input
                                         id="image-upload"
                                         type="file"
                                         accept="image/*"
+                                        multiple
                                         onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                handleImageUpload(file);
-                                            }
-                                            // Reset the input value so the same file can be selected again
+                                            handleImageUpload(e.target.files);
+                                            // Reset the input value so the same files can be selected again
                                             e.target.value = '';
                                         }}
                                         className="hidden"
@@ -895,19 +946,40 @@ const TutorAi = () => {
                                     </Button>
                                 </div>
                                 <Button
-                                className="h-7 w-16"
-                                onClick={() => handleSendMessage(userMessage)}
-                                disabled={isWaiting || (!userMessage.trim() && !selectedImage)}
-                            >
-                                <span className="-mr-2">send</span>
-                                <CornerRightUp />
-                            </Button>
+                                    className="h-7 w-16"
+                                    onClick={() => handleSendMessage(userMessage)}
+                                    disabled={isWaiting || (!userMessage.trim() && selectedImages.length === 0)}
+                                >
+                                    <span className="-mr-2">send</span>
+                                    <CornerRightUp />
+                                </Button>
                             </div>
-                           
                         </div>
                     </div>
                 </div>
             </main>
+
+            {/* Image Preview Modal */}
+            {selectedPreviewImage && (
+                <div 
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                    onClick={() => setSelectedPreviewImage(null)}
+                >
+                    <div className="relative max-w-4xl max-h-[90vh] p-4">
+                        <img
+                            src={selectedPreviewImage}
+                            alt="Preview"
+                            className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                        />
+                        <button
+                            onClick={() => setSelectedPreviewImage(null)}
+                            className="absolute top-4 right-4 p-2 bg-black/50 rounded-full hover:bg-black/70"
+                        >
+                            <X className="h-6 w-6 text-white" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

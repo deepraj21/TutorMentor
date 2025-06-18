@@ -18,16 +18,28 @@ router.post('/stream', async (req, res) => {
   try {
     const { query, chatLanguage, history, imageData } = req.body;
 
-    if (!query && !imageData) {
-      return res.status(400).json({ success: false, error: 'Query or image is required' });
+    if (!query && (!imageData || imageData.length === 0)) {
+      return res.status(400).json({ success: false, error: 'Query or at least one image is required' });
     }
 
-    // Check image size (max 20MB for Gemini API)
-    if (imageData && imageData.length > 20 * 1024 * 1024) {
+    // Check if more than 4 images are provided
+    if (imageData && imageData.length > 4) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Image size too large. Maximum size is 20MB.' 
+        error: 'Maximum 4 images allowed.' 
       });
+    }
+
+    // Check each image size (max 20MB for Gemini API)
+    if (imageData) {
+      for (const img of imageData) {
+        if (img.length > 20 * 1024 * 1024) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'One or more images exceed the maximum size of 20MB.' 
+          });
+        }
+      }
     }
 
     const model = genAI.getGenerativeModel({
@@ -45,14 +57,16 @@ router.post('/stream', async (req, res) => {
 
     let contents = [];
     
-    // If there's an image, add it to the contents
-    if (imageData) {
-      contents.push({
-        inlineData: {
-          mimeType: 'image/jpeg',
-          data: imageData
-        }
-      });
+    // If there are images, add them to the contents
+    if (imageData && imageData.length > 0) {
+      for (const img of imageData) {
+        contents.push({
+          inlineData: {
+            mimeType: 'image/jpeg',
+            data: img
+          }
+        });
+      }
     }
     
     // Add the text query
@@ -60,17 +74,34 @@ router.post('/stream', async (req, res) => {
       contents.push({ text: query });
     }
 
+    // Set proper headers for streaming response
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Transfer-Encoding', 'chunked');
+
     const result = await chat.sendMessageStream(contents);
     
-    for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      res.write(chunkText);
+    try {
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        res.write(chunkText);
+      }
+      res.end();
+    } catch (streamError) {
+      console.error('Stream error:', streamError);
+      // If we haven't sent any response yet, send an error response
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, error: 'Error processing stream' });
+      } else {
+        // If we've already started streaming, end the response
+        res.end();
+      }
     }
-    
-    res.end();
   } catch (error) {
-    console.error('Error processing stream:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Error processing request:', error);
+    // Only send error response if we haven't sent any response yet
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: error.message || 'Internal server error' });
+    }
   }
 });
 
