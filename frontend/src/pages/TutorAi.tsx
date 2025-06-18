@@ -1,5 +1,5 @@
 import Header from "../components/layout/Header";
-import { ArrowUp, Check, Copy, CornerRightUp, FileDownIcon, History, Pencil, Play, Plus, RefreshCcw, ThumbsDown, ThumbsUp, Trash, X, Image as ImageIcon } from "lucide-react"
+import { ArrowUp, Check, Copy, CornerRightUp, FileDownIcon, History, Pencil, Play, Plus, RefreshCcw, ThumbsDown, ThumbsUp, Trash, X, Image as ImageIcon, Volume2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import type React from "react"
@@ -65,6 +65,7 @@ const TutorAi = () => {
     const [imagePreviews, setImagePreviews] = useState<string[]>([])
     const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null)
     const [isUploadingImage, setIsUploadingImage] = useState(false)
+    const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
 
     const fetchChats = async () => {
         setLoading(true)
@@ -443,6 +444,25 @@ const TutorAi = () => {
 
         return groupedChats;
     };
+
+    // Speak functionality for model responses
+    const handleSpeak = (text: string, index: number) => {
+        if (!window.speechSynthesis) {
+            toast.error("Speech synthesis not supported in this browser.");
+            return;
+        }
+        if (speakingIndex !== null) {
+            window.speechSynthesis.cancel();
+            setSpeakingIndex(null);
+            return;
+        }
+        const utterance = new window.SpeechSynthesisUtterance(text);
+        utterance.onstart = () => setSpeakingIndex(index);
+        utterance.onend = () => setSpeakingIndex(null);
+        utterance.onerror = () => setSpeakingIndex(null);
+        window.speechSynthesis.speak(utterance);
+    };
+
     return (
         <div className="min-h-screen flex flex-col bg-background">
             <Header title="TutorAi Chat" />
@@ -726,6 +746,15 @@ const TutorAi = () => {
                                                             className="h-3 w-3"
                                                             fill={copiedStates[`${index}-thumb`] === "down" ? "currentColor" : "none"}
                                                         />
+                                                    </button>
+                                                    {/* Speak button */}
+                                                    <button
+                                                        onClick={() => handleSpeak(message.parts[0].text, index)}
+                                                        className={`focus:outline-none ${speakingIndex === index ? 'animate-pulse text-education-600' : ''}`}
+                                                        aria-label="Speak response"
+                                                        disabled={speakingIndex !== null && speakingIndex !== index}
+                                                    >
+                                                        <Volume2 className={`h-4 w-4 ${speakingIndex === index ? 'animate-pulse' : ''}`} />
                                                     </button>
                                                 </div>
 
