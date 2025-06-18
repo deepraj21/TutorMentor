@@ -10,12 +10,24 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const router = express.Router();
 
+// Increase payload limit to 50mb
+router.use(express.json({ limit: '50mb' }));
+router.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 router.post('/stream', async (req, res) => {
   try {
-    const { query, chatLanguage, history } = req.body;
+    const { query, chatLanguage, history, imageData } = req.body;
 
-    if (!query) {
-      return res.status(400).json({ success: false, error: 'Query is required' });
+    if (!query && !imageData) {
+      return res.status(400).json({ success: false, error: 'Query or image is required' });
+    }
+
+    // Check image size (max 20MB for Gemini API)
+    if (imageData && imageData.length > 20 * 1024 * 1024) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Image size too large. Maximum size is 20MB.' 
+      });
     }
 
     const model = genAI.getGenerativeModel({
@@ -31,7 +43,24 @@ router.post('/stream', async (req, res) => {
       history: history || []
     });
 
-    const result = await chat.sendMessageStream(query);
+    let contents = [];
+    
+    // If there's an image, add it to the contents
+    if (imageData) {
+      contents.push({
+        inlineData: {
+          mimeType: 'image/jpeg',
+          data: imageData
+        }
+      });
+    }
+    
+    // Add the text query
+    if (query) {
+      contents.push({ text: query });
+    }
+
+    const result = await chat.sendMessageStream(contents);
     
     for await (const chunk of result.stream) {
       const chunkText = chunk.text();

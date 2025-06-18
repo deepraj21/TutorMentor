@@ -10,14 +10,14 @@ import { toast } from "sonner";
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
-  const [notifications, setNotifications] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(true);
+  // const [notifications, setNotifications] = useState(true);
+  // const [emailNotifications, setEmailNotifications] = useState(true);
   
-  const handleSaveSettings = () => {
-    toast.success("Settings saved", {
-      description: "Your preferences have been updated successfully.",
-    });
-  };
+  // const handleSaveSettings = () => {
+  //   toast.success("Settings saved", {
+  //     description: "Your preferences have been updated successfully.",
+  //   });
+  // };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -47,7 +47,7 @@ const Settings = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Notifications</CardTitle>
             </CardHeader>
@@ -78,7 +78,7 @@ const Settings = () => {
             <Button onClick={handleSaveSettings}>
               Save Settings
             </Button>
-          </div>
+          </div> */}
         </div>
       </main>
     </div>

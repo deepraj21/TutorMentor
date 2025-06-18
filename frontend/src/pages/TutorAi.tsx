@@ -1,5 +1,5 @@
 import Header from "../components/layout/Header";
-import { ArrowUp, Check, Copy, CornerRightUp, FileDownIcon, History, Pencil, Play, Plus, RefreshCcw, ThumbsDown, ThumbsUp, Trash, X } from "lucide-react"
+import { ArrowUp, Check, Copy, CornerRightUp, FileDownIcon, History, Pencil, Play, Plus, RefreshCcw, ThumbsDown, ThumbsUp, Trash, X, Image as ImageIcon } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import type React from "react"
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Loader2 } from "lucide-react"
 
 interface ChatMessage {
     role: "user" | "model"
@@ -27,6 +28,10 @@ interface ChatPreview {
 }
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
+const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
 
 const TutorAi = () => {
     const { user, isLoggedIn } = useAuth()
@@ -56,6 +61,9 @@ const TutorAi = () => {
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const [filteredChats, setFilteredChats] = useState<ChatPreview[]>([])
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     useEffect(() => {
         const fetchChats = async () => {
@@ -205,8 +213,50 @@ const TutorAi = () => {
         }
     };
 
+    const handleImageUpload = async (file: File) => {
+        if (!file) return;
+        
+        // Check file size
+        if (file.size > MAX_IMAGE_SIZE) {
+            toast.error('Image size too large. Maximum size is 20MB.');
+            return;
+        }
+
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please upload an image file.');
+            return;
+        }
+        
+        setIsUploadingImage(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', uploadPreset);
+
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+                {
+                    method: 'POST',
+                    body: formData,
+                }
+            );
+
+            const data = await response.json();
+            if (data.secure_url) {
+                setSelectedImage(file);
+                setImagePreview(data.secure_url);
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            toast.error('Failed to upload image');
+        } finally {
+            setIsUploadingImage(false);
+        }
+    };
+
     const handleSendMessage = async (userMessage: string) => {
-        if (!userMessage.trim()) return
+        if (!userMessage.trim() && !selectedImage) return;
 
         if (!user) {
             setChatHistory([
@@ -233,6 +283,19 @@ const TutorAi = () => {
         setUserMessage("")
 
         try {
+            let imageData = null;
+            if (selectedImage) {
+                // Convert image to base64
+                imageData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64data = reader.result as string;
+                        resolve(base64data.split(',')[1]);
+                    };
+                    reader.readAsDataURL(selectedImage);
+                });
+            }
+
             const response = await fetch(`${BACKEND_URL}/api/ai/stream`, {
                 method: "POST",
                 headers: {
@@ -242,14 +305,20 @@ const TutorAi = () => {
                     query: userMessage,
                     chatLanguage,
                     history: chatHistory,
+                    imageData,
                 }),
-            })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to process request');
+            }
 
             if (response.status === 401) {
                 throw new Error("Please sign in to access Voyager AI chat")
             }
 
-            if (!response.ok || !response.body) {
+            if (!response.body) {
                 throw new Error("Stream response error")
             }
 
@@ -267,6 +336,9 @@ const TutorAi = () => {
             }
 
             setChatHistory([...newHistory, { role: "model" as const, parts: [{ text: modelResponse }] }])
+            // Clear image after sending
+            setSelectedImage(null);
+            setImagePreview(null);
         } catch (error) {
             console.error("Chat error:", error)
             setChatHistory([
@@ -276,6 +348,7 @@ const TutorAi = () => {
                     parts: [{ text: error instanceof Error ? error.message : "Error occurred while processing your request." }],
                 },
             ])
+            toast.error(error instanceof Error ? error.message : "Error occurred while processing your request.");
         } finally {
             setIsStreaming(false)
             setStreamingText("")
@@ -745,6 +818,24 @@ const TutorAi = () => {
                     )}
                 </div>
                 <div className="relative">
+                    {imagePreview && (
+                        <div className="-mt-20 absolute bg-muted p-2 rounded-lg border shadow-lg">
+                            <img 
+                                src={imagePreview} 
+                                alt="Preview" 
+                                className="h-14 w-14 rounded-lg object-contain"
+                            />
+                            <button
+                                onClick={() => {
+                                    setSelectedImage(null);
+                                    setImagePreview(null);
+                                }}
+                                className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/70"
+                            >
+                                <X className="h-4 w-4 text-white" />
+                            </button>
+                        </div>
+                    )}
                     <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700 border-gray-300 overflow-hidden shadow-lg">
                         <Textarea
                             placeholder={isLoggedIn ? 'Type your message...' : "Sign in with Google to chat with Tutor AI"}
@@ -753,27 +844,66 @@ const TutorAi = () => {
                             disabled={isWaiting || !isLoggedIn}
                             className="resize-none dark:bg-gray-800/50 border-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
                             onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey && userMessage.trim()) {
+                                if (e.key === "Enter" && !e.shiftKey && (userMessage.trim() || selectedImage)) {
                                     e.preventDefault();
                                     handleSendMessage(userMessage);
                                 }
                             }}
                         />
                         <div className="p-2 flex items-center justify-between">
-                            <Tabs defaultValue="English" onValueChange={(value) => setChatLanguage(value)}>
-                                <TabsList>
-                                    <TabsTrigger value="English" className="h-7 w-10 rounded-full">en</TabsTrigger>
-                                    <TabsTrigger value="Bengali" className="h-7 w-10 rounded-full">বাং</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
-                            <Button
+                        <Tabs defaultValue="English" onValueChange={(value) => setChatLanguage(value)}>
+                                    <TabsList>
+                                        <TabsTrigger value="English" className="h-7 w-10 rounded-full">en</TabsTrigger>
+                                        <TabsTrigger value="Bengali" className="h-7 w-10 rounded-full">বাং</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                            <div className="flex items-center gap-2">
+                               
+                                <div className="relative">
+                                    <input
+                                        id="image-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                handleImageUpload(file);
+                                            }
+                                            // Reset the input value so the same file can be selected again
+                                            e.target.value = '';
+                                        }}
+                                        className="hidden"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        disabled={isUploadingImage}
+                                        onClick={() => {
+                                            const input = document.getElementById('image-upload') as HTMLInputElement;
+                                            if (input) {
+                                                input.click();
+                                            }
+                                        }}
+                                    >
+                                        {isUploadingImage ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <ImageIcon className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                                <Button
                                 className="h-7 w-16"
                                 onClick={() => handleSendMessage(userMessage)}
-                                disabled={isWaiting || !userMessage.trim()}
+                                disabled={isWaiting || (!userMessage.trim() && !selectedImage)}
                             >
                                 <span className="-mr-2">send</span>
                                 <CornerRightUp />
                             </Button>
+                            </div>
+                           
                         </div>
                     </div>
                 </div>
