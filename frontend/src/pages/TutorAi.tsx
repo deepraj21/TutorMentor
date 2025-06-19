@@ -14,7 +14,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2 } from "lucide-react"
-import html2canvas from "html2canvas";
 import { WhatsappShareButton, EmailShareButton, TelegramShareButton, WhatsappIcon, EmailIcon, TelegramIcon, FacebookShareButton, FacebookIcon } from "react-share";
 import { Dialog, DialogContent, DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -70,10 +69,8 @@ const TutorAi = () => {
     const [isUploadingImage, setIsUploadingImage] = useState(false)
     const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
     const messageRefs = useRef<(HTMLDivElement | null)[]>([]);
-    const [shareImage, setShareImage] = useState<string | null>(null);
     const [shareIndex, setShareIndex] = useState<number | null>(null);
     const [isShareOpen, setIsShareOpen] = useState(false);
-    const pairRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const fetchChats = async () => {
         setLoading(true)
@@ -482,17 +479,8 @@ const TutorAi = () => {
     };
 
     const handleShare = async (pairIdx: number) => {
-        const node = pairRefs.current[pairIdx];
-        if (!node) return toast.error("Unable to capture message for sharing.");
-        try {
-            const canvas = await html2canvas(node, { backgroundColor: null });
-            const dataUrl = canvas.toDataURL("image/png");
-            setShareImage(dataUrl);
-            setShareIndex(pairIdx);
-            setIsShareOpen(true);
-        } catch (err) {
-            toast.error("Failed to capture message for sharing.");
-        }
+        setShareIndex(pairIdx);
+        setIsShareOpen(true);
     };
 
     return (
@@ -614,7 +602,7 @@ const TutorAi = () => {
                     {chatHistory.length > 0 && (
                         <div ref={chatContainerRef} className="space-y-4 mb-4 h-full overflow-auto no-scrollbar">
                             {getMessagePairs().map((pair, pairIdx) => (
-                                <div key={pairIdx} ref={el => pairRefs.current[pairIdx] = el} className="mb-4">
+                                <div key={pairIdx} className="mb-4">
                                     {/* User message */}
                                     <div className={`rounded-lg font-semibold text-[20px]`}>
                                         <div className="markdown prose dark:prose-invert max-w-none break-words">
@@ -933,26 +921,6 @@ const TutorAi = () => {
                     )}
                 </div>
                 <div className="relative">
-                    {imagePreviews.length > 0 && (
-                        <div className="-mt-20 absolute bg-muted p-2 rounded-lg border shadow-lg flex gap-2">
-                            {imagePreviews.map((preview, index) => (
-                                <div key={index} className="relative">
-                                    <img
-                                        src={preview}
-                                        alt={`Preview ${index + 1}`}
-                                        className="h-14 w-14 rounded-lg object-contain cursor-pointer"
-                                        onClick={() => setSelectedPreviewImage(preview)}
-                                    />
-                                    <button
-                                        onClick={() => handleRemoveImage(index)}
-                                        className="absolute -top-1 -right-1 p-1 bg-black/50 rounded-full hover:bg-black/70"
-                                    >
-                                        <X className="h-4 w-4 text-white" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                     <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700 border-gray-300 overflow-hidden shadow-lg">
                         <Textarea
                             placeholder={isLoggedIn ? 'Type your message...' : "Sign in with Google to chat with TutorAI"}
@@ -1044,25 +1012,38 @@ const TutorAi = () => {
                 </div>
             )}
 
-            {isShareOpen && shareImage && (
+            {isShareOpen && shareIndex !== null && (
                 <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader className="p-6 border-b">
                             <DialogTitle>Share your Chat</DialogTitle>
                         </DialogHeader>
                         <div className="p-6 pt-0 flex flex-col gap-4 items-center">
-                            <img src={shareImage} alt="Share Preview" className="max-w-[300px] max-h-[300px] rounded" />
                             <div className="flex gap-4">
-                                <WhatsappShareButton url={shareImage} title={shareIndex !== null ? chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text : ''} separator="\n">
+                                <WhatsappShareButton
+                                    title={chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text}
+                                    url={window.location.href}
+                                    separator="\n"
+                                >
                                     <div className="flex items-center gap-2"><WhatsappIcon size={40} round /></div>
                                 </WhatsappShareButton>
-                                <TelegramShareButton url={shareImage} title={shareIndex !== null ? chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text : ''}>
+                                <TelegramShareButton
+                                    title={chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text}
+                                    url={window.location.href}
+                                >
                                     <div className="flex items-center gap-2"><TelegramIcon size={40} round /></div>
                                 </TelegramShareButton>
-                                <EmailShareButton url={shareImage} subject="Shared from TutorAI" body={shareIndex !== null ? chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text : ''}>
+                                <EmailShareButton
+                                    subject="Shared from TutorAI"
+                                    body={chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text + '\n' + window.location.href}
+                                    url={window.location.href}
+                                >
                                     <div className="flex items-center gap-2"><EmailIcon size={40} round /></div>
                                 </EmailShareButton>
-                                <FacebookShareButton url={shareImage} quote={shareIndex !== null ? chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text : ''}>
+                                <FacebookShareButton
+                                    url={window.location.href}
+                                    hashtag="#TutorAI"
+                                >
                                     <div className="flex items-center gap-2"><FacebookIcon size={40} round /></div>
                                 </FacebookShareButton>
                             </div>
