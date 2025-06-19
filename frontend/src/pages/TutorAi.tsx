@@ -1023,7 +1023,7 @@ const TutorAi = () => {
                                 <WhatsappShareButton
                                     title={chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text}
                                     url={window.location.href}
-                                    separator="\n"
+                                    separator=" "
                                 >
                                     <div className="flex items-center gap-2"><WhatsappIcon size={40} round /></div>
                                 </WhatsappShareButton>
@@ -1035,7 +1035,7 @@ const TutorAi = () => {
                                 </TelegramShareButton>
                                 <EmailShareButton
                                     subject="Shared from TutorAI"
-                                    body={chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text + '\n' + window.location.href}
+                                    body={chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text + '\n' }
                                     url={window.location.href}
                                 >
                                     <div className="flex items-center gap-2"><EmailIcon size={40} round /></div>
