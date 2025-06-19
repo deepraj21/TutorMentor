@@ -1,5 +1,5 @@
 import Header from "../components/layout/Header";
-import { ArrowUp, Check, Copy, CornerRightUp, FileDownIcon, History, Pencil, Play, Plus, RefreshCcw, ThumbsDown, ThumbsUp, Trash, X, Image as ImageIcon, Volume2 } from "lucide-react"
+import { ArrowUp, Check, Copy, CornerRightUp, FileDownIcon, History, Pencil, Play, Plus, RefreshCcw, ThumbsDown, ThumbsUp, Trash, X, Image as ImageIcon, Volume2, Share2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import type React from "react"
@@ -14,6 +14,9 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2 } from "lucide-react"
+import html2canvas from "html2canvas";
+import { WhatsappShareButton, EmailShareButton, TelegramShareButton, WhatsappIcon, EmailIcon, TelegramIcon, FacebookShareButton, FacebookIcon } from "react-share";
+import { Dialog, DialogContent, DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ChatMessage {
     role: "user" | "model"
@@ -66,6 +69,11 @@ const TutorAi = () => {
     const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null)
     const [isUploadingImage, setIsUploadingImage] = useState(false)
     const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+    const messageRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const [shareImage, setShareImage] = useState<string | null>(null);
+    const [shareIndex, setShareIndex] = useState<number | null>(null);
+    const [isShareOpen, setIsShareOpen] = useState(false);
+    const pairRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const fetchChats = async () => {
         setLoading(true)
@@ -219,7 +227,7 @@ const TutorAi = () => {
         }
 
         const newFiles = Array.from(files);
-        
+
         // Check file sizes and types
         for (const file of newFiles) {
             if (file.size > MAX_IMAGE_SIZE) {
@@ -282,7 +290,7 @@ const TutorAi = () => {
                     role: "model" as const,
                     parts: [
                         {
-                            text: "Thank you for using `Tutor AI` but it seems you are not signed in.\nPlease Sign in with Google to continue",
+                            text: "Thank you for using `TutorAI` but it seems you are not signed in.\nPlease Sign in with Google to continue",
                         },
                     ],
                 },
@@ -310,7 +318,7 @@ const TutorAi = () => {
             let imageData = null;
             if (selectedImages.length > 0) {
                 // Convert images to base64
-                imageData = await Promise.all(selectedImages.map(file => 
+                imageData = await Promise.all(selectedImages.map(file =>
                     new Promise((resolve) => {
                         const reader = new FileReader();
                         reader.onloadend = () => {
@@ -463,9 +471,33 @@ const TutorAi = () => {
         window.speechSynthesis.speak(utterance);
     };
 
+    const getMessagePairs = () => {
+        const pairs: { userIdx: number, modelIdx: number }[] = [];
+        for (let i = 0; i < chatHistory.length - 1; i++) {
+            if (chatHistory[i].role === "user" && chatHistory[i + 1].role === "model") {
+                pairs.push({ userIdx: i, modelIdx: i + 1 });
+            }
+        }
+        return pairs;
+    };
+
+    const handleShare = async (pairIdx: number) => {
+        const node = pairRefs.current[pairIdx];
+        if (!node) return toast.error("Unable to capture message for sharing.");
+        try {
+            const canvas = await html2canvas(node, { backgroundColor: null });
+            const dataUrl = canvas.toDataURL("image/png");
+            setShareImage(dataUrl);
+            setShareIndex(pairIdx);
+            setIsShareOpen(true);
+        } catch (err) {
+            toast.error("Failed to capture message for sharing.");
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col bg-background">
-            <Header title="TutorAi Chat" />
+            <Header title="TutorAI Chat" />
             <main className="flex-1 container max-w-6xl mx-auto px-4 bg-background max-h-[calc(100vh-75px)] overflow-y-scroll no-scrollbar">
                 <div className="flex flex-row py-4 items-center justify-between">
                     <div className="flex flex-row items-center gap-4">
@@ -575,37 +607,42 @@ const TutorAi = () => {
                         <div className="flex items-start justify-end h-full flex-col gap-2 py-4">
                             <img src={tutormentor} alt="tutor-mentor-logo" className="h-20 w-20 dark:invert" />
                             <span className="text-2xl">Hi there, {user?.displayName || user?.name}</span>
-                            <span className="text-3xl">Welcome to Tutor AI</span>
+                            <span className="text-3xl">Welcome to TutorAI</span>
                             <span className="text-sm">what would you like to know?</span>
                         </div>
                     )}
                     {chatHistory.length > 0 && (
                         <div ref={chatContainerRef} className="space-y-4 mb-4 h-full overflow-auto no-scrollbar">
-                            {chatHistory.map((message, index) => (
-                                <div
-                                    key={index}
-                                    className={`rounded-lg ${message.role === "user" ? "font-semibold text-[20px]" : "text-[15px]"}`}
-                                >
-                                    <div className="markdown prose dark:prose-invert max-w-none break-words">
-                                        {message.role === "user" ? (
-                                            <>
-                                                {message.parts[0].text}
-                                                {/* Render user images if present */}
-                                                {message.parts[0].images && message.parts[0].images.length > 0 && (
-                                                    <div className="flex gap-2 mt-2">
-                                                        {message.parts[0].images.map((img, idx) => (
-                                                            <img
-                                                                key={idx}
-                                                                src={img}
-                                                                alt={`User uploaded ${idx + 1}`}
-                                                                className="h-20 w-20 object-contain rounded cursor-pointer"
-                                                                onClick={() => setSelectedPreviewImage(img)}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </>
-                                        ) : (
+                            {getMessagePairs().map((pair, pairIdx) => (
+                                <div key={pairIdx} ref={el => pairRefs.current[pairIdx] = el} className="mb-4">
+                                    {/* User message */}
+                                    <div className={`rounded-lg font-semibold text-[20px]`}>
+                                        <div className="markdown prose dark:prose-invert max-w-none break-words">
+                                            {chatHistory[pair.userIdx].parts[0].text}
+                                            {chatHistory[pair.userIdx].parts[0].images && chatHistory[pair.userIdx].parts[0].images.length > 0 && (
+                                                <div className="flex gap-2 mt-2">
+                                                    {chatHistory[pair.userIdx].parts[0].images.map((img, idx) => (
+                                                        <img
+                                                            key={idx}
+                                                            src={img}
+                                                            alt={`User uploaded ${idx + 1}`}
+                                                            className="h-20 w-20 object-contain rounded cursor-pointer"
+                                                            onClick={() => setSelectedPreviewImage(img)}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-zinc-400 text-sm border-b dark:border-zinc-800 border-zinc-300 mb-2 mt-2">
+                                            <div className="w-fit border-b border-zinc-600 dark:border-zinc-200 p-1 flex items-center gap-1">
+                                                <img src={tutormentor} alt="tutor-mentor-logo" className="h-5 w-5 dark:invert" />
+                                                <span className="text-primary">TutorAI</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Model message */}
+                                    <div className={`rounded-lg text-[15px]`}>
+                                        <div className="markdown prose dark:prose-invert max-w-none break-words">
                                             <ReactMarkdown
                                                 rehypePlugins={[rehypeRaw]}
                                                 remarkPlugins={[remarkGfm]}
@@ -701,21 +738,9 @@ const TutorAi = () => {
                                                     ),
                                                 }}
                                             >
-                                                {message.parts[0].text}
+                                                {chatHistory[pair.modelIdx].parts[0].text}
                                             </ReactMarkdown>
-                                        )}
-                                    </div>
-
-                                    {message.role === "user" && (
-                                        <div className="text-zinc-400 text-sm border-b dark:border-zinc-800 border-zinc-300 mb-2 mt-2">
-                                            <div className="w-fit border-b border-zinc-600 dark:border-zinc-200 p-1 flex items-center gap-1">
-                                                <img src={tutormentor} alt="tutor-mentor-logo" className="h-5 w-5 dark:invert" />
-                                                <span className="text-primary">Tutor AI</span>
-                                            </div>
                                         </div>
-                                    )}
-
-                                    {message.role !== "user" && (
                                         <div className="text-zinc-400 text-sm mt-2">
                                             <div className="flex items-center gap-3 justify-between">
                                                 <div className="flex items-center gap-2">
@@ -723,45 +748,52 @@ const TutorAi = () => {
                                                         onClick={() =>
                                                             setCopiedStates((prev) => ({
                                                                 ...prev,
-                                                                [`${index}-thumb`]: prev[`${index}-thumb`] === "up" ? null : "up",
+                                                                [`${pair.userIdx}-thumb`]: prev[`${pair.userIdx}-thumb`] === "up" ? null : "up",
                                                             }))
                                                         }
                                                         className="focus:outline-none"
                                                     >
                                                         <ThumbsUp
                                                             className="h-3 w-3"
-                                                            fill={copiedStates[`${index}-thumb`] === "up" ? "currentColor" : "none"}
+                                                            fill={copiedStates[`${pair.userIdx}-thumb`] === "up" ? "currentColor" : "none"}
                                                         />
                                                     </button>
                                                     <button
                                                         onClick={() =>
                                                             setCopiedStates((prev) => ({
                                                                 ...prev,
-                                                                [`${index}-thumb`]: prev[`${index}-thumb`] === "down" ? null : "down",
+                                                                [`${pair.userIdx}-thumb`]: prev[`${pair.userIdx}-thumb`] === "down" ? null : "down",
                                                             }))
                                                         }
                                                         className="focus:outline-none"
                                                     >
                                                         <ThumbsDown
                                                             className="h-3 w-3"
-                                                            fill={copiedStates[`${index}-thumb`] === "down" ? "currentColor" : "none"}
+                                                            fill={copiedStates[`${pair.userIdx}-thumb`] === "down" ? "currentColor" : "none"}
                                                         />
                                                     </button>
                                                     {/* Speak button */}
                                                     <button
-                                                        onClick={() => handleSpeak(message.parts[0].text, index)}
-                                                        className={`focus:outline-none ${speakingIndex === index ? 'animate-pulse text-education-600' : ''}`}
+                                                        onClick={() => handleSpeak(chatHistory[pair.modelIdx].parts[0].text, pair.modelIdx)}
+                                                        className={`focus:outline-none ${speakingIndex === pair.modelIdx ? 'animate-pulse text-education-600' : ''}`}
                                                         aria-label="Speak response"
-                                                        disabled={speakingIndex !== null && speakingIndex !== index}
+                                                        disabled={speakingIndex !== null && speakingIndex !== pair.modelIdx}
                                                     >
-                                                        <Volume2 className={`h-4 w-4 ${speakingIndex === index ? 'animate-pulse' : ''}`} />
+                                                        <Volume2 className={`h-4 w-4 ${speakingIndex === pair.modelIdx ? 'animate-pulse' : ''}`} />
                                                     </button>
                                                 </div>
 
                                                 <div className="flex flex-row items-center gap-2">
                                                     <button
                                                         className="text-zinc-400 dark:hover:text-white hover:text-black flex items-center"
-                                                        onClick={() => handleExport(message)}
+                                                        onClick={() => handleShare(pairIdx)}
+                                                    >
+                                                        <Share2 className="h-3 w-3 mr-1" />
+                                                        share
+                                                    </button>
+                                                    <button
+                                                        className="text-zinc-400 dark:hover:text-white hover:text-black flex items-center"
+                                                        onClick={() => handleExport(chatHistory[pair.modelIdx])}
                                                     >
                                                         <FileDownIcon className="h-3 w-3 mr-1" />
                                                         export
@@ -769,9 +801,9 @@ const TutorAi = () => {
                                                     <div className="ml-auto flex items-center gap-1">
                                                         <button
                                                             className="text-zinc-400 dark:hover:text-white hover:text-black flex items-center"
-                                                            onClick={() => handleCopy(index, message)}
+                                                            onClick={() => handleCopy(pair.modelIdx, chatHistory[pair.modelIdx])}
                                                         >
-                                                            {copiedStates[index] ? (
+                                                            {copiedStates[pair.modelIdx] ? (
                                                                 <>
                                                                     <span className="text-green-400">
                                                                         <Check className="mr-1 h-3 w-3" />
@@ -789,7 +821,7 @@ const TutorAi = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             ))}
 
@@ -923,7 +955,7 @@ const TutorAi = () => {
                     )}
                     <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700 border-gray-300 overflow-hidden shadow-lg">
                         <Textarea
-                            placeholder={isLoggedIn ? 'Type your message...' : "Sign in with Google to chat with Tutor AI"}
+                            placeholder={isLoggedIn ? 'Type your message...' : "Sign in with Google to chat with TutorAI"}
                             onChange={(e) => setUserMessage(e.target.value)}
                             value={userMessage}
                             disabled={isWaiting || !isLoggedIn}
@@ -992,7 +1024,7 @@ const TutorAi = () => {
 
             {/* Image Preview Modal */}
             {selectedPreviewImage && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
                     onClick={() => setSelectedPreviewImage(null)}
                 >
@@ -1010,6 +1042,33 @@ const TutorAi = () => {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {isShareOpen && shareImage && (
+                <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader className="p-6 border-b">
+                            <DialogTitle>Share your Chat</DialogTitle>
+                        </DialogHeader>
+                        <div className="p-6 pt-0 flex flex-col gap-4 items-center">
+                            <img src={shareImage} alt="Share Preview" className="max-w-[300px] max-h-[300px] rounded" />
+                            <div className="flex gap-4">
+                                <WhatsappShareButton url={shareImage} title={shareIndex !== null ? chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text : ''} separator="\n">
+                                    <div className="flex items-center gap-2"><WhatsappIcon size={40} round /></div>
+                                </WhatsappShareButton>
+                                <TelegramShareButton url={shareImage} title={shareIndex !== null ? chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text : ''}>
+                                    <div className="flex items-center gap-2"><TelegramIcon size={40} round /></div>
+                                </TelegramShareButton>
+                                <EmailShareButton url={shareImage} subject="Shared from TutorAI" body={shareIndex !== null ? chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text : ''}>
+                                    <div className="flex items-center gap-2"><EmailIcon size={40} round /></div>
+                                </EmailShareButton>
+                                <FacebookShareButton url={shareImage} quote={shareIndex !== null ? chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text : ''}>
+                                    <div className="flex items-center gap-2"><FacebookIcon size={40} round /></div>
+                                </FacebookShareButton>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     );
