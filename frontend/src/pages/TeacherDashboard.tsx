@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
-import { ArrowRight, Grid2X2Icon, List, Plus, Eye, EyeOff, EllipsisVertical, Copy, Archive, Trash2, Book, RefreshCw, Notebook, Loader2, Share2, X } from "lucide-react";
+import { ArrowRight, Grid2X2Icon, List, Plus, Eye, EyeOff, EllipsisVertical, Copy, Archive, Trash2, Book, RefreshCw, Notebook, Loader2, Share2, X, LucideMailPlus, MailPlusIcon } from "lucide-react";
 import { toast } from "sonner"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { classroomApi } from "@/utils/api";
@@ -177,7 +177,7 @@ const TeacherDashboard = () => {
     setIsResetting(true);
     try {
       const response = await classroomApi.refreshClassCode(classId);
-      setClasses(classes.map(cls => 
+      setClasses(classes.map(cls =>
         cls._id === classId ? response.classroom : cls
       ));
       toast.success(`Class code for ${className} has been refreshed`);
@@ -326,7 +326,7 @@ const TeacherDashboard = () => {
 
             <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-education-600 hover:bg-education-700">
+                <Button className="bg-education-600 hover:bg-education-700" size="sm">
                   <Plus className="h-4 w-4" />
                   Join
                 </Button>
@@ -350,14 +350,14 @@ const TeacherDashboard = () => {
                       </InputOTPGroup>
                     </InputOTP>
                     <Button onClick={handleJoinClass} disabled={isJoining} className="hidden md:block">
-                    {isJoining ? (
-                      <>
-                        Joining..
-                      </>
-                    ) : (
-                      'Join Class'
-                    )}
-                  </Button>
+                      {isJoining ? (
+                        <>
+                          Joining..
+                        </>
+                      ) : (
+                        'Join Class'
+                      )}
+                    </Button>
                   </div>
                 </div>
                 <DialogFooter className="p-6 border-t md:hidden">
@@ -378,7 +378,7 @@ const TeacherDashboard = () => {
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-education-600 hover:bg-education-700">
+                <Button className="bg-education-600 hover:bg-education-700" size="sm">
                   <Plus className="h-4 w-4" />
                   Create
                 </Button>
@@ -520,7 +520,7 @@ const TeacherDashboard = () => {
                                 <DropdownMenuContent>
                                   <DropdownMenuLabel>{cls.name}</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     className="flex flex-row justify-between items-center"
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -529,9 +529,9 @@ const TeacherDashboard = () => {
                                       setShareDialogOpen(true);
                                     }}
                                   >
-                                    Share <Share2 className="h-4 w-4 text-gray-700" />
+                                    Invite <MailPlusIcon className="h-4 w-4 text-primary" />
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     className="flex flex-row justify-between items-center text-red-600"
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -556,7 +556,7 @@ const TeacherDashboard = () => {
                                   <DropdownMenuContent>
                                     <DropdownMenuLabel>{cls.name}</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                       className="flex flex-row justify-between items-center"
                                       onClick={(e) => {
                                         e.preventDefault();
@@ -565,9 +565,9 @@ const TeacherDashboard = () => {
                                         setShareDialogOpen(true);
                                       }}
                                     >
-                                      Share <Share2 className="h-4 w-4 text-gray-700" />
+                                      Invite <LucideMailPlus className="h-4 w-4 text-primary" />
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                       className="flex flex-row justify-between items-center text-red-600"
                                       onClick={(e) => {
                                         e.preventDefault();
@@ -648,7 +648,7 @@ const TeacherDashboard = () => {
                                 <DropdownMenuContent>
                                   <DropdownMenuLabel>{cls.name}</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     className="flex flex-row justify-between items-center text-red-600"
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -673,7 +673,7 @@ const TeacherDashboard = () => {
                                   <DropdownMenuContent>
                                     <DropdownMenuLabel>{cls.name}</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                       className="flex flex-row justify-between items-center text-red-600"
                                       onClick={(e) => {
                                         e.preventDefault();
@@ -724,13 +724,13 @@ const TeacherDashboard = () => {
                     <Plus className="h-4 w-4" />
                     Join Class
                   </Button>
-                    <Button
-                      onClick={() => setIsDialogOpen(true)}
-                      className="bg-education-600 hover:bg-education-700"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create Class
-                    </Button>
+                  <Button
+                    onClick={() => setIsDialogOpen(true)}
+                    className="bg-education-600 hover:bg-education-700"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Class
+                  </Button>
                 </div>
               </div>
             )}
@@ -748,14 +748,14 @@ const TeacherDashboard = () => {
             </div>
             <DialogFooter className="p-6 border-t">
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="hidden md:block" disabled={isDeleting}>Cancel</Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={() => selectedClass && handleDeleteClass(selectedClass._id, selectedClass.name)}
                 disabled={isDeleting}
               >
                 {isDeleting ? (
                   <>
-                   <Loader2 className="h-4 animate-spin" />
+                    <Loader2 className="h-4 animate-spin" />
                     Deleting...
                   </>
                 ) : (
@@ -777,7 +777,7 @@ const TeacherDashboard = () => {
             </div>
             <DialogFooter className="p-6 border-t">
               <Button variant="outline" onClick={() => setResetDialogOpen(false)} className="hidden md:block" disabled={isResetting}>Cancel</Button>
-              <Button 
+              <Button
                 onClick={() => selectedClass && handleRefreshClassCode(selectedClass._id, selectedClass.name)}
                 disabled={isResetting}
               >
@@ -805,8 +805,8 @@ const TeacherDashboard = () => {
             </div>
             <DialogFooter className="p-6 border-t">
               <Button variant="outline" onClick={() => setLeaveDialogOpen(false)} className="hidden md:block" disabled={isLeaving}>Cancel</Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={() => selectedClass && handleLeaveClass(selectedClass._id, selectedClass.name)}
                 disabled={isLeaving}
               >
@@ -868,7 +868,7 @@ const TeacherDashboard = () => {
               <Button variant="outline" onClick={() => setShareDialogOpen(false)} className="hidden md:block" disabled={isSending}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={() => selectedClass && handleShareClass(selectedClass)}
                 disabled={isSending}
               >

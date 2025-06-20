@@ -534,13 +534,13 @@ const TutorAi = () => {
                             <PopoverContent className="w-[250px] mt-2 p-0" align="end">
                                 <Command className="shadow-md">
                                     <CommandInput
-                                        placeholder="searchChats"
+                                        placeholder="Search Chats..."
                                         value={searchQuery}
                                         onValueChange={setSearchQuery}
                                         className="h-9"
                                     />
                                     <CommandList>
-                                        <CommandEmpty>noChatsFound</CommandEmpty>
+                                        <CommandEmpty>No Chats Found</CommandEmpty>
                                         <CommandGroup>
                                             {loading ? (
                                                 <div className="py-6 text-center text-sm text-muted-foreground">loadingChats...</div>
@@ -729,9 +729,9 @@ const TutorAi = () => {
                                                 {chatHistory[pair.modelIdx].parts[0].text}
                                             </ReactMarkdown>
                                         </div>
-                                        <div className="text-zinc-400 text-sm mt-2">
+                                        <div className="text-zinc-400 text-sm mt-3">
                                             <div className="flex items-center gap-3 justify-between">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-3">
                                                     <button
                                                         onClick={() =>
                                                             setCopiedStates((prev) => ({
@@ -742,7 +742,7 @@ const TutorAi = () => {
                                                         className="focus:outline-none"
                                                     >
                                                         <ThumbsUp
-                                                            className="h-3 w-3"
+                                                            className="h-4 w-4"
                                                             fill={copiedStates[`${pair.userIdx}-thumb`] === "up" ? "currentColor" : "none"}
                                                         />
                                                     </button>
@@ -756,7 +756,7 @@ const TutorAi = () => {
                                                         className="focus:outline-none"
                                                     >
                                                         <ThumbsDown
-                                                            className="h-3 w-3"
+                                                            className="h-4 w-4"
                                                             fill={copiedStates[`${pair.userIdx}-thumb`] === "down" ? "currentColor" : "none"}
                                                         />
                                                     </button>
@@ -767,24 +767,24 @@ const TutorAi = () => {
                                                         aria-label="Speak response"
                                                         disabled={speakingIndex !== null && speakingIndex !== pair.modelIdx}
                                                     >
-                                                        <Volume2 className={`h-4 w-4 ${speakingIndex === pair.modelIdx ? 'animate-pulse' : ''}`} />
+                                                        <Volume2 className={`h-5 w-5 ${speakingIndex === pair.modelIdx ? 'animate-pulse' : ''}`} />
                                                     </button>
                                                 </div>
 
-                                                <div className="flex flex-row items-center gap-2">
+                                                <div className="flex flex-row items-center gap-3">
                                                     <button
                                                         className="text-zinc-400 dark:hover:text-white hover:text-black flex items-center"
                                                         onClick={() => handleShare(pairIdx)}
                                                     >
-                                                        <Share2 className="h-3 w-3 mr-1" />
-                                                        share
+                                                        <Share2 className="h-4 w-4 mr-1" />
+                                                        <span className="text-[16px]">share</span>
                                                     </button>
                                                     <button
                                                         className="text-zinc-400 dark:hover:text-white hover:text-black flex items-center"
                                                         onClick={() => handleExport(chatHistory[pair.modelIdx])}
                                                     >
-                                                        <FileDownIcon className="h-3 w-3 mr-1" />
-                                                        export
+                                                        <FileDownIcon className="h-4 w-4 mr-1" />
+                                                        <span className="text-[16px]">export</span>
                                                     </button>
                                                     <div className="ml-auto flex items-center gap-1">
                                                         <button
@@ -794,14 +794,14 @@ const TutorAi = () => {
                                                             {copiedStates[pair.modelIdx] ? (
                                                                 <>
                                                                     <span className="text-green-400">
-                                                                        <Check className="mr-1 h-3 w-3" />
+                                                                        <Check className="mr-1 h-4 w-4" />
                                                                     </span>{" "}
-                                                                    copied
+                                                                    <span className="text-[16px]">copied</span>
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <Copy className="h-3 w-3 mr-1" />
-                                                                    copy
+                                                                    <Copy className="h-4 w-4 mr-1" />
+                                                                    <span className="text-[16px]">copy</span>
                                                                 </>
                                                             )}
                                                         </button>
@@ -921,6 +921,26 @@ const TutorAi = () => {
                     )}
                 </div>
                 <div className="relative">
+                    {imagePreviews.length > 0 && (
+                        <div className="-mt-20 absolute bg-muted p-1 rounded-lg border shadow-lg flex gap-2">
+                            {imagePreviews.map((preview, index) => (
+                                <div key={index} className="relative">
+                                    <img
+                                        src={preview}
+                                        alt={`Preview ${index + 1}`}
+                                        className="h-14 w-14 rounded-lg object-contain cursor-pointer"
+                                        onClick={() => setSelectedPreviewImage(preview)}
+                                    />
+                                    <button
+                                        onClick={() => handleRemoveImage(index)}
+                                        className="absolute -top-1 -right-1 p-1 bg-black/50 rounded-full hover:bg-black/70"
+                                    >
+                                        <X className="h-4 w-4 text-white" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     <div className="border rounded-lg dark:bg-gray-800 dark:border-gray-700 border-gray-300 overflow-hidden shadow-lg">
                         <Textarea
                             placeholder={isLoggedIn ? 'Type your message...' : "Sign in with Google to chat with TutorAI"}
@@ -1035,7 +1055,7 @@ const TutorAi = () => {
                                 </TelegramShareButton>
                                 <EmailShareButton
                                     subject="Shared from TutorAI"
-                                    body={chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text + '\n' }
+                                    body={chatHistory[getMessagePairs()[shareIndex].modelIdx].parts[0].text + '\n'}
                                     url={window.location.href}
                                 >
                                     <div className="flex items-center gap-2"><EmailIcon size={40} round /></div>

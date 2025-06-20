@@ -24,6 +24,8 @@ import Forgot from "./pages/Forgot";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import MathEditor from "./pages/MathEditor";
+import QuestionBank from "./pages/Questions";
+import TestManagement from "./pages/Test";
 
 const queryClient = new QueryClient();
 
@@ -86,7 +88,7 @@ const App = () => (
                           </ProtectedRoute>
                         } />
 
-                         <Route path="math-editor" element={
+                        <Route path="math-editor" element={
                           <ProtectedRoute>
                             <MathEditor />
                           </ProtectedRoute>
@@ -101,6 +103,18 @@ const App = () => (
                         <Route path="/tutor-ai" element={
                           <ProtectedRoute>
                             <TutorAi />
+                          </ProtectedRoute>
+                        } />
+
+                        <Route path="/manage-questions" element={
+                          <ProtectedRoute>
+                            <QuestionBank />
+                          </ProtectedRoute>
+                        } />
+
+<Route path="/manage-tests" element={
+                          <ProtectedRoute>
+                            <TestManagement />
                           </ProtectedRoute>
                         } />
 

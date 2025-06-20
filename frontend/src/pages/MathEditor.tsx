@@ -130,92 +130,90 @@ const MathEditor = () => {
     return (
         <div className="flex flex-col bg-background">
             <Header title="Math Editor" />
-            <main className="flex-1 container max-w-6xl mx-auto px-4 bg-background ">
-                <div className="max-h-[calc(100vh-75px)] overflow-y-scroll no-scrollbar">
-                <div className="flex flex-row py-4 items-center justify-between">
-                        <Button
-                            onClick={() => setShowAddDialog(true)}
-                            className="bg-education-600 hover:bg-education-700" size="sm"
-                        >
-                            <Plus className="h-4 w-4" />
-                            <span className="hidden md:block">Add Expression</span>
-                        </Button>
-                        <div className="mr-[2px] flex items-center border rounded-md focus-within:ring-0 focus-within:border-education-600">
-                            <Search className="h-4 w-4 ml-2 text-muted-foreground" />
-                            <Input
-                                placeholder="Search by title..."
-                                value={searchQuery}
-                                onChange={(e) => handleSearch(e.target.value)}
-                                className="w-[200px] md:w-[300px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <div className="border rounded-lg shadow-lg transition-shadow border-t-4 border-t-education-600 overflow-hidden">
-                            {loading ? (
-                                <div className="space-y-4 p-4">
-                                    {[1, 2, 3].map((index) => (
-                                        <div key={index}>
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Skeleton className="h-5 w-5" />
-                                                    <Skeleton className="h-6 w-48" />
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    <Skeleton className="h-8 w-8" />
-                                                    <Skeleton className="h-8 w-8" />
-                                                    <Skeleton className="h-8 w-8" />
-                                                </div>
-                                            </div>
-                                            <Skeleton className="h-24 w-full" />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <>
-                                    {expressions.map((expression) => (
-                                        <div key={expression._id} className="border-b">
-                                            <ExpressionCard
-                                                expression={expression}
-                                                onUpdate={(updates) => updateExpression(expression._id, updates)}
-                                                onDelete={() => deleteExpression(expression._id)}
-                                            />
-                                        </div>
-                                    ))}
-
-                                    {expressions.length === 0 && (
-                                        <div className="text-center p-6">
-                                            <h3 className="text-lg font-medium mb-2">
-                                                {searchQuery ? 'No matching expressions found' : 'No expressions yet'}
-                                            </h3>
-                                            <p className="text-sm mb-4">
-                                                {searchQuery
-                                                    ? 'Try adjusting your search query'
-                                                    : 'Add your first mathematical expression or graph on this page.'}
-                                            </p>
-                                            {!searchQuery && (
-                                                <Button
-                                                    onClick={() => setShowAddDialog(true)}
-                                                    className="bg-education-600 hover:bg-education-700" size="sm"
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                    Add Expression
-                                                </Button>
-                                            )}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                        <AddExpressionDialog
-                            open={showAddDialog}
-                            onOpenChange={setShowAddDialog}
-                            onAdd={addExpression}
+            <main className="flex-1 container max-w-6xl mx-auto py-8 px-4 bg-background max-h-[calc(100vh-75px)] overflow-y-scroll no-scrollbar">
+                <div className="flex justify-between items-center mb-8">
+                    <Button
+                        onClick={() => setShowAddDialog(true)}
+                        className="bg-education-600 hover:bg-education-700" size="sm"
+                    >
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden md:block">Add Expression</span>
+                    </Button>
+                    <div className="mr-[2px] flex items-center border rounded-md focus-within:ring-0 focus-within:border-education-600">
+                        <Search className="h-4 w-4 ml-2 text-muted-foreground" />
+                        <Input
+                            placeholder="Search by title..."
+                            value={searchQuery}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            className="w-[200px] md:w-[300px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
                         />
                     </div>
                 </div>
-            </main>
-        </div>
+                <div>
+                    <div className="border rounded-lg shadow-lg transition-shadow border-t-4 border-t-education-600 overflow-hidden">
+                        {loading ? (
+                            <div className="space-y-4 p-4">
+                                {[1, 2, 3].map((index) => (
+                                    <div key={index}>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <Skeleton className="h-5 w-5" />
+                                                <Skeleton className="h-6 w-48" />
+                                            </div>
+                                            <div className="flex gap-1">
+                                                <Skeleton className="h-8 w-8" />
+                                                <Skeleton className="h-8 w-8" />
+                                                <Skeleton className="h-8 w-8" />
+                                            </div>
+                                        </div>
+                                        <Skeleton className="h-24 w-full" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <>
+                                {expressions.map((expression) => (
+                                    <div key={expression._id} className="border-b">
+                                        <ExpressionCard
+                                            expression={expression}
+                                            onUpdate={(updates) => updateExpression(expression._id, updates)}
+                                            onDelete={() => deleteExpression(expression._id)}
+                                        />
+                                    </div>
+                                ))}
+
+                                {expressions.length === 0 && (
+                                    <div className="text-center p-6">
+                                        <h3 className="text-lg font-medium mb-2">
+                                            {searchQuery ? 'No matching expressions found' : 'No expressions yet'}
+                                        </h3>
+                                        <p className="text-sm mb-4">
+                                            {searchQuery
+                                                ? 'Try adjusting your search query'
+                                                : 'Add your first mathematical expression or graph on this page.'}
+                                        </p>
+                                        {!searchQuery && (
+                                            <Button
+                                                onClick={() => setShowAddDialog(true)}
+                                                className="bg-education-600 hover:bg-education-700" size="sm"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                                Add Expression
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                    <AddExpressionDialog
+                        open={showAddDialog}
+                        onOpenChange={setShowAddDialog}
+                        onAdd={addExpression}
+                    />
+                </div>
+            </main >
+        </div >
     )
 }
 

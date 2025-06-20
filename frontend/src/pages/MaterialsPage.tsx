@@ -456,26 +456,15 @@ const MaterialsPage = () => {
             Back to dashboard
           </Link>
 
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">
-                {classroomDetails?.name || 'Class'} - {classroomDetails?.section || 'Materials'}
-              </h2>
-              <div className="flex md:flex-row flex-col gap-2 mt-1 text-sm text-muted-foreground">
-                {classroomDetails?.createdBy?.name && (
-                  <>
-                    <span>Created by {classroomDetails.createdBy.name}</span>
-                    <span className="hidden md:block">•</span>
-                    <span>Created on {classroomDetails.createdAt ? new Date(classroomDetails.createdAt).toLocaleDateString() : ''}</span>
-                  </>
-                )}
-              </div>
-            </div>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-foreground">
+              {classroomDetails?.name || 'Class'} - {classroomDetails?.section || 'Materials'}
+            </h2>
 
             {user?.role === "teacher" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-education-600 hover:bg-education-700">
+                  <Button className="bg-education-600 hover:bg-education-700" size="sm">
                     <Plus className="h-4 w-4" />
                     Add Material
                   </Button>
@@ -758,6 +747,7 @@ const MaterialsPage = () => {
                     <Button
                       onClick={() => setIsDialogOpen(true)}
                       className="bg-education-600 hover:bg-education-700"
+                      size="sm"
                     >
                       <Plus className="h-4 w-4" />
                       Add Material
@@ -837,7 +827,7 @@ const MaterialsPage = () => {
                   <ul className="space-y-2">
                     {classroomDetails.enrolledStudents.map(student => (
                       <li key={student._id} className="flex justify-between items-center">
-                        <span>{student.name} ({student.email})</span>
+                        <span>{student.name}</span>
                         {user && classroomDetails?.createdBy._id === user.id && (
                           <div className="flex items-center gap-2">
                             <Button

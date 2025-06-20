@@ -16,7 +16,7 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Settings, LogOut, ChevronUp, User2, Home, BookOpen, LibraryBig, Bot, BookmarkXIcon, Pi } from "lucide-react"
+import { Settings, LogOut, ChevronUp, User2, Home, BookOpen, LibraryBig, Bot, BookmarkXIcon, Pi, FileQuestionIcon, PenBox } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -196,9 +196,45 @@ export function AppSidebar() {
         </SidebarGroup>
         <SidebarSeparator />
         <SidebarGroup>
+          <SidebarGroupLabel>Exam</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/manage-questions")} tooltip="TutorAI Chat">
+                  <Link to="/manage-questions" onClick={handleMobileNavClick}>
+                    <FileQuestionIcon />
+                    <span>Questions</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {isTeacher && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/manage-tests")} tooltip="TutorAI Chat">
+                    <Link to="/manage-tests" onClick={handleMobileNavClick}>
+                      <PenBox />
+                      <span>Tests</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarSeparator />
+        <SidebarGroup>
           <SidebarGroupLabel>Tools</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {isTeacher && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/math-editor")} tooltip="TutorAI Chat">
+                    <Link to="/math-editor" onClick={handleMobileNavClick}>
+                      <Pi />
+                      <span>Math Editor</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive("/tutor-ai")} tooltip="TutorAI Chat">
                   <Link to="/tutor-ai" onClick={handleMobileNavClick}>
@@ -207,19 +243,11 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {isTeacher && (
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/math-editor")} tooltip="TutorAI Chat">
-                  <Link to="/math-editor" onClick={handleMobileNavClick}>
-                    <Pi />
-                    <span>Math Editor</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+
 
       </SidebarContent>
 

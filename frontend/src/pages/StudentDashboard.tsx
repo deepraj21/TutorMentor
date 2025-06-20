@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import Header from "../components/layout/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +11,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
-import { ArrowRight, Book, EllipsisVertical, Grid2X2Icon, Info, List, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowRight, EllipsisVertical, Grid2X2Icon, Info, List, Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -149,14 +148,14 @@ const StudentDashboard = () => {
                       </InputOTPGroup>
                     </InputOTP>
                     <Button onClick={handleJoinClass} disabled={isJoining} className="hidden md:block">
-                    {isJoining ? (
-                      <>
-                        Joining..
-                      </>
-                    ) : (
-                      'Join Class'
-                    )}
-                  </Button>
+                      {isJoining ? (
+                        <>
+                          Joining..
+                        </>
+                      ) : (
+                        'Join Class'
+                      )}
+                    </Button>
                   </div>
                 </div>
                 <DialogFooter className="p-6 border-t md:hidden">
@@ -230,11 +229,11 @@ const StudentDashboard = () => {
             ))}
           </div>
         ) : classes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center  text-center">
-           <img src={noClass} alt="" className="h-80 w-80 dark:invert" />
+          <div className="flex flex-col items-center justify-center text-center">
+            <img src={noClass} alt="" className="h-80 w-80 dark:invert" />
             <h3 className="text-xl font-semibold text-foreground mb-2">No Classes Yet</h3>
             <p className="text-muted-foreground mb-4">Join your first class to get started</p>
-            <Button 
+            <Button
               onClick={() => setIsDialogOpen(true)}
               className="bg-education-600 hover:bg-education-700"
             >
@@ -248,9 +247,8 @@ const StudentDashboard = () => {
             : "flex flex-col gap-4"
           }>
             {classes.map((cls) => (
-              <Card key={cls._id} className={`hover:shadow-md transition-shadow border-t-4 border-t-education-400 overflow-hidden bg-card ${
-                viewMode === "list" ? "w-full" : "h-full"
-              }`}>
+              <Card key={cls._id} className={`hover:shadow-md transition-shadow border-t-4 border-t-education-400 overflow-hidden bg-card ${viewMode === "list" ? "w-full" : "h-full"
+                }`}>
                 <CardContent className={`${viewMode === "list" ? "py-4" : "pt-6"}`}>
                   {viewMode === "list" ? (
                     <div className="flex items-center justify-between">
@@ -280,7 +278,7 @@ const StudentDashboard = () => {
                               <DropdownMenuLabel>{cls.name}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem className="flex flex-row justify-between items-center">Info <Info className="h-4 w-4 text-education-600" /></DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="flex flex-row justify-between items-center text-red-600"
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -306,8 +304,8 @@ const StudentDashboard = () => {
                             <DropdownMenuContent>
                               <DropdownMenuLabel>{cls.name}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="flex flex-row justify-between items-center">Info <Info className="h-4 w-4 text-education-600"/></DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem className="flex flex-row justify-between items-center">Info <Info className="h-4 w-4 text-education-600" /></DropdownMenuItem>
+                              <DropdownMenuItem
                                 className="flex flex-row justify-between items-center text-red-600"
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -316,7 +314,7 @@ const StudentDashboard = () => {
                                   setLeaveDialogOpen(true);
                                 }}
                               >
-                                Leave <Trash2 className="h-4 w-4 text-red-800"/>
+                                Leave <Trash2 className="h-4 w-4 text-red-800" />
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -351,8 +349,8 @@ const StudentDashboard = () => {
             </div>
             <DialogFooter className="p-6 border-t">
               <Button variant="outline" onClick={() => setLeaveDialogOpen(false)} className="hidden md:block" disabled={isLeaving}>Cancel</Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={() => selectedClass && handleUnenroll(selectedClass._id, selectedClass.name)}
                 disabled={isLeaving}
               >
